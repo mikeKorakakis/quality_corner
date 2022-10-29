@@ -22,7 +22,7 @@ interface Props<T> {
   isLoading: boolean;
 }
 
-function Table<T>(props: Props<T>) {
+function Table2<T>(props: Props<T>) {
   const { data, pagination, setPagination, columns, isLoading } = props;
 //   const rerender = useReducer(() => ({}), {})[1];
   const defaultData = useMemo(() => [], []);
@@ -151,4 +151,4 @@ function Table<T>(props: Props<T>) {
   );
 }
 
-export default Table;
+export default Table2;

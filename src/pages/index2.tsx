@@ -22,10 +22,10 @@ const columns = [
     header: () => <span>Body</span>,
     // footer: (info) => info.column.id,
   }),
-  columnHelper.display({
-  id:"actions",
-  cell: props => 'dellj'//<RowActions row={props.row} />,
-  }),
+//   columnHelper.display({
+//   id:"actions",
+//   cell: props => 'dellj'//<RowActions row={props.row} />,
+//   }),
 ];
 export default function Home() {
   const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({

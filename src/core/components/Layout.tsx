@@ -21,7 +21,6 @@ import Image from "next/image";
 const title = "Title";
 const Layout: React.FC<any> = ({ children }) => {
   const isLoggedIn = true;
-  const map = false;
   const router = useRouter();
 
   const currentPath = router.pathname;
@@ -224,7 +223,7 @@ const Layout: React.FC<any> = ({ children }) => {
 
       {/* Static sidebar for desktop */}
       {/* Sidebar component, swap this element with another sidebar if you like */}
-      <div className="hidden xl:fixed xl:inset-y-0 xl:flex xl:w-64 xl:flex-col">
+      <div className="hidden xl:fixed xl:inset-y-0 xl:flex xl:w-64 xl:flex-col bg-base-100">
         <div className="flex flex-grow flex-col  overflow-y-auto bg-base-200">
           <div className="flex h-16 flex-shrink-0 items-center bg-base-200 px-4">
             <Image
@@ -322,8 +321,8 @@ const Layout: React.FC<any> = ({ children }) => {
           </div>
         </div>
       </div>
-      <div className="flex flex-1 flex-col xl:pl-64">
-        <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-white shadow">
+      <div className=" flex flex-1 flex-col xl:pl-64">
+        <div className="sticky bg-base-100 top-0 z-10 flex h-16 flex-shrink-0  shadow">
           <button
             type="button"
             className="focus:ring-primary-500 border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset xl:hidden"
