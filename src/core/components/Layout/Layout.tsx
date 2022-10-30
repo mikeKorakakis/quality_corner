@@ -15,10 +15,11 @@ import { useRouter } from "next/router";
 import { Transition, Dialog, Menu, Disclosure } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Image from "next/image";
-// import { Inter } from '@next/font/google'
-// const inter = Inter()
-//generate tailwindcsss layout
-const title = "Title";
+import { signOut } from "next-auth/react";
+import { APP_NAME } from "../../../config";
+
+
+const title = APP_NAME;
 const Layout: React.FC<any> = ({ children }) => {
   const isLoggedIn = true;
   const router = useRouter();
@@ -70,10 +71,7 @@ const Layout: React.FC<any> = ({ children }) => {
     // { name: "Reports", href: "#", icon: ChartBarIcon, current: false, count: null },
   ];
 
-  const logout = () => {
-    console.log("logout");
-  };
-  const accountNavigation = [{ name: "Logout", onClick: logout }];
+  const accountNavigation = [{ name: "Logout", onClick: signOut }];
   const navigation = adminNavigation;
 
   return (
@@ -223,7 +221,7 @@ const Layout: React.FC<any> = ({ children }) => {
 
       {/* Static sidebar for desktop */}
       {/* Sidebar component, swap this element with another sidebar if you like */}
-      <div className="hidden xl:fixed xl:inset-y-0 xl:flex xl:w-64 xl:flex-col bg-base-100">
+      <div className="hidden bg-base-100 xl:fixed xl:inset-y-0 xl:flex xl:w-64 xl:flex-col">
         <div className="flex flex-grow flex-col  overflow-y-auto bg-base-200">
           <div className="flex h-16 flex-shrink-0 items-center bg-base-200 px-4">
             <Image
@@ -322,7 +320,7 @@ const Layout: React.FC<any> = ({ children }) => {
         </div>
       </div>
       <div className=" flex flex-1 flex-col xl:pl-64">
-        <div className="sticky bg-base-100 top-0 z-10 flex h-16 flex-shrink-0  shadow">
+        <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-base-100  shadow">
           <button
             type="button"
             className="focus:ring-primary-500 border-r border-gray-200 px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset xl:hidden"
@@ -367,7 +365,7 @@ const Layout: React.FC<any> = ({ children }) => {
                         <Menu.Item key={item.name}>
                           {({ active }) => (
                             <div
-                              onClick={item.onClick}
+                              onClick={() => item.onClick()}
                               className={clsx(
                                 active ? "bg-gray-100" : "",
                                 "block cursor-pointer px-4 py-2 text-center text-sm text-gray-700"

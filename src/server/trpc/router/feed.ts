@@ -8,16 +8,20 @@ export const feedRouter = router({
         pageIndex: z.number().min(0).optional().default(0),
         pageSize: z.number().min(1).max(50).optional().default(10),
         sorting: z.array(
-          z.object({
-            id: z.string(),
-            desc: z.boolean(),
-          })
+          z
+            .object({
+              id: z.string(),
+              desc: z.boolean(),
+            })
+            .optional()
         ),
         columnFilters: z.array(
-          z.object({
-            id: z.string(),
-            value: z.string(),
-          })
+          z
+            .object({
+              id: z.string(),
+              value: z.unknown(),
+            })
+            .optional()
         ),
       })
     )
@@ -28,19 +32,20 @@ export const feedRouter = router({
         };
       }> = [];
 
-
       let sorting: Array<{
-        [x: string]:  'asc' | 'desc'}> = [];
-
+        [x: string]: "asc" | "desc";
+      }> = [];
       if (input.columnFilters && input.columnFilters.length > 0) {
         colFilters = input.columnFilters.map((f) => {
-          return { [f.id]: { contains: f.value } };
+          return f && typeof f.value === "string"
+            ? { [f.id]: { contains: f.value } }
+            : {};
         });
       }
 
       if (input.sorting && input.sorting.length > 0) {
         sorting = input.sorting.map((f) => {
-          return { [f.id]:  f.desc ? 'desc' : 'asc' };
+          return f ? { [f.id]: f.desc ? "desc" : "asc" } : {};
         });
       }
 

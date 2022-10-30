@@ -1,0 +1,1 @@
+export const APP_NAME = "Super T3 App";

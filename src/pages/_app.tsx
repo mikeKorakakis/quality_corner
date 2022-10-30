@@ -3,8 +3,10 @@ import "../styles/globals.css";
 import { SessionProvider } from "next-auth/react";
 import type { Session } from "next-auth";
 import type { AppType } from "next/app";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import { trpc } from "../utils/trpc";
-import Layout from "../core/components/Layout";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -12,9 +14,8 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <Layout>
-        <Component {...pageProps} />
-      </Layout>
+      <Component {...pageProps} />
+      <ToastContainer position="bottom-right" pauseOnHover/>
     </SessionProvider>
   );
 };

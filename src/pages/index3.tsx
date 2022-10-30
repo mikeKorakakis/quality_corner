@@ -23,6 +23,12 @@ import { trpc } from "../utils/trpc";
 
 type FeedGetAllOutput = AppRouterOutputTypes["feed"]["getAll"];
 
+type ProcedureOutput = AppRouterOutputTypes["feed"]["getAll"];
+type DataType = ProcedureOutput["data"][0];
+type DataTypeKeys = keyof DataType;
+const test = 'title' as DataTypeKeys
+console.log(test);
+
 const columnHelper = createColumnHelper<FeedGetAllOutput["data"][0]>();
 
 const columns = [
@@ -58,10 +64,14 @@ export default function Home() {
     columnFilters,
   };
 
-  const { isLoading, error, data } = trpc.feed.getAll.useQuery(
+   const { isLoading, error, data } = trpc["feed"]["getAll"].useQuery(
     fetchDataOptions,
     { keepPreviousData: true }
   );
+//   const { isLoading, error, data } = trpc.feed.getAll.useQuery(
+//     fetchDataOptions,
+//     { keepPreviousData: true }
+//   );
   const defaultData = useMemo(() => [], []);
 
   const pagination = useMemo(
@@ -100,7 +110,7 @@ export default function Home() {
 
   if (error) return <div>{"An error has occurred: " + error.message}</div>;
   return (
-    <div className="overflow-x-auto bg-base-100">
+    <div className="overflow-x-auto ">
       <table className="z-0 table w-fit">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -169,71 +179,75 @@ export default function Home() {
               );
             })}
         </tbody>
+        <tfoot>
+          <tr className="w-full py-2">
+            <th colSpan={20}>
+              <div className="btn-group ml-2  ">
+                <button
+                  className="btn-outline btn border-base-300 bg-base-100"
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  «
+                </button>
+                <button
+                  className="btn-outline btn border-base-300 bg-base-100"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  {"<"}
+                </button>
+                <button className="btn-outline btn border-base-300 bg-base-100">
+                  {table.getState().pagination.pageIndex + 1} of{" "}
+                  {table.getPageCount()}
+                </button>
+                <button
+                  className="btn-outline btn border-base-300 bg-base-100"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  {">"}
+                </button>
+                <button
+                  className="btn-outline btn border-base-300 bg-base-100"
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                >
+                  »
+                </button>
+              </div>
+              <span className="ml-4  items-center gap-1 ">
+                Go to page:
+                <input
+                  type="number"
+                  defaultValue={table.getState().pagination.pageIndex + 1}
+                  onChange={(e) => {
+                    const page = e.target.value
+                      ? Number(e.target.value) - 1
+                      : 0;
+                    table.setPageIndex(page);
+                  }}
+                  className="input-bordered input input-md ml-2 w-20  focus:border-neutral-focus focus:outline-none focus:ring-0  "
+                />
+              </span>
+              <select
+                className="select-bordered select ml-4 w-min  focus:border-neutral-focus focus:outline-none focus:ring-0 "
+                value={table.getState().pagination.pageSize}
+                onChange={(e) => {
+                  table.setPageSize(Number(e.target.value));
+                }}
+              >
+                {[10, 20, 30, 40, 50].map((pageSize) => (
+                  <option key={pageSize} value={pageSize}>
+                    Show {pageSize}
+                  </option>
+                ))}
+              </select>
+              {isLoading ? "Loading..." : null}
+            </th>
+          </tr>
+        </tfoot>
       </table>
-      <tfoot>
-        <tr className="flex py-2">
-          <div className="btn-group ml-2 bg-base-100">
-            <button
-              className="btn-outline btn border-base-300"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-            >
-              «
-            </button>
-            <button
-              className="btn-outline btn border-base-300"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              {"<"}
-            </button>
-            <button className="btn-outline btn border-base-300">
-              {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </button>
-            <button
-              className="btn-outline btn border-base-300"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              {">"}
-            </button>
-            <button
-              className="btn-outline btn border-base-300"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-            >
-              »
-            </button>
-          </div>
-          <span className="ml-4 flex items-center gap-1">
-            Go to page:
-            <input
-              type="number"
-              defaultValue={table.getState().pagination.pageIndex + 1}
-              onChange={(e) => {
-                const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                table.setPageIndex(page);
-              }}
-              className="input-bordered input input-md ml-2 w-20  focus:border-neutral-focus focus:outline-none focus:ring-0  "
-            />
-          </span>
-          <select
-            className="select-bordered select ml-4 w-min  focus:border-neutral-focus focus:outline-none focus:ring-0 "
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => {
-              table.setPageSize(Number(e.target.value));
-            }}
-          >
-            {[10, 20, 30, 40, 50].map((pageSize) => (
-              <option key={pageSize} value={pageSize}>
-                Show {pageSize}
-              </option>
-            ))}
-          </select>
-          {isLoading ? "Loading..." : null}
-        </tr>
-      </tfoot>
 
       {/* <div>{table.getRowModel().rows.length} Rows</div>
     <div>
@@ -244,56 +258,6 @@ export default function Home() {
   );
 }
 
-// function Filter({
-//   column,
-//   table,
-// }: {
-//   column: Column<any, any>;
-//   table: ReactTable<any>;
-// }) {
-//   const firstValue = table
-//     .getPreFilteredRowModel()
-//     .flatRows[0]?.getValue(column.id);
-
-//   const columnFilterValue = column.getFilterValue();
-
-//   return typeof firstValue === "number" ? (
-//     <div className="flex space-x-2">
-//       <DebouncedInput
-//         type="number"
-//         value={(columnFilterValue as [number, number])?.[0] ?? ""}
-//         onChange={(e) =>
-//           column.setFilterValue((old: [number, number]) => [
-//             e.target.value,
-//             old?.[1],
-//           ])
-//         }
-//         placeholder={`Min`}
-//         className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
-//       />
-//       <input
-//         type="number"
-//         value={(columnFilterValue as [number, number])?.[1] ?? ""}
-//         onChange={(e) =>
-//           column.setFilterValue((old: [number, number]) => [
-//             old?.[0],
-//             e.target.value,
-//           ])
-//         }
-//         placeholder={`Max`}
-//         className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
-//       />
-//     </div>
-//   ) : (
-//     <input
-//       type="text"
-//       value={(columnFilterValue ?? "") as string}
-//       onChange={(e) => column.setFilterValue(e.target.value)}
-//       placeholder={`Search...`}
-//       className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
-//     />
-//   );
-// }
 
 function DebouncedInput({
   value: initialValue,
