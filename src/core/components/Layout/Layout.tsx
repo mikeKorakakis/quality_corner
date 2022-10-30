@@ -16,8 +16,7 @@ import { Transition, Dialog, Menu, Disclosure } from "@headlessui/react";
 import { Fragment, useState } from "react";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
-import { APP_NAME } from "../../../config";
-
+import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "../../../config";
 
 const title = APP_NAME;
 const Layout: React.FC<any> = ({ children }) => {
@@ -71,7 +70,11 @@ const Layout: React.FC<any> = ({ children }) => {
     // { name: "Reports", href: "#", icon: ChartBarIcon, current: false, count: null },
   ];
 
-  const accountNavigation = [{ name: "Logout", onClick: signOut }];
+  const onSignout = () => {
+    signOut({ callbackUrl: POST_LOGOUT_REDIRECT_URL });
+  };
+
+  const accountNavigation = [{ name: "Logout", onClick: onSignout }];
   const navigation = adminNavigation;
 
   return (
@@ -319,7 +322,7 @@ const Layout: React.FC<any> = ({ children }) => {
           </div>
         </div>
       </div>
-      <div className=" flex flex-1 flex-col xl:pl-64">
+      <div className=" flex flex-1 flex-col xl:pl-64 h-screen">
         <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-base-100  shadow">
           <button
             type="button"
@@ -388,7 +391,7 @@ const Layout: React.FC<any> = ({ children }) => {
           <main>
             <div className="max-w-8xl mx-auto h-full sm:px-6 xl:px-8">
               <div className="h-full px-4 py-8 sm:px-0">
-                <div className="h-full">{children}</div>
+                <div className="h-full m-auto">{children}</div>
               </div>
               {/* /End replace */}
             </div>

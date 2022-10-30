@@ -24,16 +24,17 @@ const Page: React.FC<Props> = ({
 
   useEffect(() => {
     if (auth && !sessionData && status !== "loading") {
-          router.push("/auth/signin");
+      router.push("/auth/signin");
     }
-}, [status, auth, sessionData, router]);
+  }, [status, auth, sessionData, router]);
 
-if(status === 'loading') return null// <LoadingPage page={true}/>;
+  if (status === "loading") return null; // <LoadingPage page={true}/>;
   return (
     <div className="h-full bg-gray-50">
       <Head>
         <title>{`${title} | ${APP_NAME}`}</title>
       </Head>
+      {/* <input type="checkbox" id="my-modal" className="modal-toggle" /> */}
       {navbar ? (
         <Layout>{children}</Layout>
       ) : (

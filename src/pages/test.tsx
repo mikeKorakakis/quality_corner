@@ -1,5 +1,5 @@
 import Page from "../core/components/Layout/Page";
-import Test from './../core/components/Test';
+import Test from '../features/Test';
 
 export default function TestPage() {
   return (

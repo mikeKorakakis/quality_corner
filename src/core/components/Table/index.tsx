@@ -17,17 +17,28 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
-import { AppRouterOutputTypes, trpc } from "../../utils/trpc";
+import { notify } from "../../../utils/notify";
+import { AppRouterOutputTypes, trpc } from "../../../utils/trpc";
+import Skeleton from "../Layout/Skeleton";
+import TableActions from "./TableActions";
 
 interface Props {
   router: "feed";
   procedure: "getAll";
   columnMap: Map<unknown, unknown>;
+  EditForm?: React.FC;
+  DeleteForm?: React.FC;
 }
 
-export default function Home({ router, procedure, columnMap }: Props) {
+export default function Home({
+  router,
+  procedure,
+  columnMap,
+  EditForm,
+  DeleteForm,
+}: Props) {
   type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof procedure];
   type DataType = ProcedureOutput["data"][0];
   type DataTypeKeys = keyof DataType;
@@ -36,14 +47,42 @@ export default function Home({ router, procedure, columnMap }: Props) {
   //   const columns = useMemo(() => {
   const columnsArray = Array.from(columnMap);
   const columns = columnsArray.map((innerArr) => {
-    const key = innerArr[0] as DataTypeKeys;
+    const key = innerArr[0] as DataTypeKeys | "display";
     const title = innerArr[1] as string;
-    return columnHelper.accessor(key, {
-      id: key,
-      header: () => <span>{title}</span>,
-      cell: (info) => <i>{info.getValue()}</i>,
-    });
+    if (key === "display") {
+      return columnHelper.display({
+        id: key,
+        cell: () => title,
+      });
+    } else {
+      return columnHelper.accessor(key, {
+        id: key.toString(),
+        header: () => <span>{title}</span>,
+        cell: (info) => <i>{info.getValue()}</i>,
+      });
+    }
   });
+  if (EditForm || DeleteForm) {
+    columns.push(
+      columnHelper.display({
+        id: "edit",
+        cell: (info) => {
+          return (
+            <TableActions
+              EditForm={
+                (EditForm && EditForm({ id: info.row.original.id })) ??
+                undefined
+              }
+              DeleteForm={
+                (DeleteForm && DeleteForm({ id: info.row.original.id })) ??
+                undefined
+              }
+            />
+          );
+        },
+      })
+    );
+  }
   // return columns;
   //   }, [columnMap, columnHelper]);
 
@@ -69,10 +108,10 @@ export default function Home({ router, procedure, columnMap }: Props) {
   );
   useEffect(() => {
     if (error) {
-      toast.error(error.message);
+      notify(error.message, "error");
     }
   }, [error]);
-  
+
   const defaultData = useMemo(() => [], []);
 
   const pagination = useMemo(
@@ -108,56 +147,59 @@ export default function Home({ router, procedure, columnMap }: Props) {
   });
 
   return (
-    <div className="overflow-x-auto ">
-      <table className="z-0 table w-fit rounded-3xl shadow-lg">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : (
-                      <>
-                        <div
-                          {...{
-                            className: header.column.getCanSort()
-                              ? "cursor-pointer select-none"
-                              : "",
-                            onClick: header.column.getToggleSortingHandler(),
-                          }}
-                        >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                          {{
-                            asc: (
-                              <ArrowUpCircleIcon className="ml-2 inline w-5" />
-                            ),
-                            desc: (
-                              <ArrowDownCircleIcon className="ml-2 inline w-5" />
-                            ),
-                          }[header.column.getIsSorted() as string] ?? (
+    <table className="z-0 table w-fit rounded-3xl shadow-lg">
+      <thead>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <tr key={headerGroup.id}>
+            {headerGroup.headers.map((header) => {
+              return (
+                <th key={header.id} colSpan={header.colSpan}>
+                  {header.isPlaceholder ? null : (
+                    <>
+                      <div
+                        {...{
+                          className: header.column.getCanSort()
+                            ? "cursor-pointer select-none"
+                            : "",
+                          onClick: header.column.getToggleSortingHandler(),
+                        }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {{
+                          asc: (
+                            <ArrowUpCircleIcon className="ml-2 inline w-5" />
+                          ),
+                          desc: (
+                            <ArrowDownCircleIcon className="ml-2 inline w-5" />
+                          ),
+                        }[header.column.getIsSorted() as string] ??
+                          (header.column.getCanSort() ? (
                             <ArrowRightCircleIcon className="ml-2 inline w-5" />
-                          )}
-                        </div>
-                        <div>
-                          {header.column.getCanFilter() ? (
-                            <div>
-                              <Filter column={header.column} table={table} />
-                            </div>
-                          ) : null}
-                        </div>
-                      </>
-                    )}
-                  </th>
-                );
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table
+                          ) : null)}
+                      </div>
+                      <div>
+                        {header.column.getCanFilter() ? (
+                          <div>
+                            <Filter column={header.column} table={table} />
+                          </div>
+                        ) : null}
+                      </div>
+                    </>
+                  )}
+                </th>
+              );
+            })}
+          </tr>
+        ))}
+      </thead>
+      <tbody>
+        {isLoading ? (
+          <Skeleton />
+        ) : (
+          table
             .getRowModel()
             .rows.slice(0, 10)
             .map((row) => {
@@ -175,90 +217,89 @@ export default function Home({ router, procedure, columnMap }: Props) {
                   })}
                 </tr>
               );
-            })}
-        </tbody>
-        <tfoot className=" rounded-b-3xl">
-          <tr className="w-full py-2">
-            <th colSpan={20}>
-              <div className="btn-group ml-2  ">
-                <button
-                  className="btn-outline btn border-base-300 bg-base-100"
-                  onClick={() => table.setPageIndex(0)}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  «
-                </button>
-                <button
-                  className="btn-outline btn border-base-300 bg-base-100"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                >
-                  {"<"}
-                </button>
-                <button className="btn-outline btn border-base-300 bg-base-100">
-                  {table.getState().pagination.pageIndex + 1} of{" "}
-                  {table.getPageCount()}
-                </button>
-                <button
-                  className="btn-outline btn border-base-300 bg-base-100"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                >
-                  {">"}
-                </button>
-                <button
-                  className="btn-outline btn border-base-300 bg-base-100"
-                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
-                >
-                  »
-                </button>
-              </div>
-              <span className="ml-4  items-center gap-1 ">
-                Go to page:
-                <input
-                  type="number"
-                  defaultValue={table.getState().pagination.pageIndex + 1}
-                  onChange={(e) => {
-                    const page = e.target.value
-                      ? Number(e.target.value) - 1
-                      : 0;
-                    table.setPageIndex(page);
-                  }}
-                  className="input-bordered input input-md ml-2 w-20  focus:border-neutral-focus focus:outline-none focus:ring-0  "
-                />
-              </span>
-              <select
-                className="select-bordered select ml-4 w-min  focus:border-neutral-focus focus:outline-none focus:ring-0 "
-                value={table.getState().pagination.pageSize}
-                onChange={(e) => {
-                  table.setPageSize(Number(e.target.value));
-                }}
+            })
+        )}
+      </tbody>
+      <tfoot className=" rounded-b-3xl">
+        <tr className="w-full py-2">
+          <th colSpan={20}>
+            <div className="btn-group ml-2  ">
+              <button
+                className="btn-outline btn border-base-300 bg-base-100"
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
               >
-                {[10, 20, 30, 40, 50].map((pageSize) => (
-                  <option key={pageSize} value={pageSize}>
-                    Show {pageSize}
-                  </option>
-                ))}
-              </select>
-              {/* <div>
+                «
+              </button>
+              <button
+                className="btn-outline btn border-base-300 bg-base-100"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                {"<"}
+              </button>
+              <button className="btn-outline btn border-base-300 bg-base-100">
+                {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
+              </button>
+              <button
+                className="btn-outline btn border-base-300 bg-base-100"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                {">"}
+              </button>
+              <button
+                className="btn-outline btn border-base-300 bg-base-100"
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+              >
+                »
+              </button>
+            </div>
+            <span className="ml-4  items-center gap-1 ">
+              Go to page:
+              <input
+                type="number"
+                defaultValue={table.getState().pagination.pageIndex + 1}
+                onChange={(e) => {
+                  const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                  table.setPageIndex(page);
+                }}
+                className="input-bordered input input-md ml-2 w-20  focus:border-neutral-focus focus:outline-none focus:ring-0  "
+              />
+            </span>
+            <select
+              className="select-bordered select ml-4 w-min  focus:border-neutral-focus focus:outline-none focus:ring-0 "
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => {
+                table.setPageSize(Number(e.target.value));
+              }}
+            >
+              {[10, 20, 30, 40, 50].map((pageSize) => (
+                <option key={pageSize} value={pageSize}>
+                  Show {pageSize}
+                </option>
+              ))}
+            </select>
+            {/* <div>
                 <button onClick={() => rerender()}>Force Rerender</button>
               </div> */}
-              {isLoading ? "Loading..." : null}
-            </th>
-          </tr>
-        </tfoot>
-      </table>
-
-      {/* <div>{table.getRowModel().rows.length} Rows</div>
-      <div>
-        <button onClick={() => rerender()}>Force Rerender</button>
-      </div>
-      <pre>{JSON.stringify(pagination, null, 2)}</pre> */}
-    </div>
+            {isLoading ? "Loading..." : null}
+          </th>
+        </tr>
+      </tfoot>
+    </table>
   );
 }
 
+{
+  /* <div>{table.getRowModel().rows.length} Rows</div>
+<div>
+  <button onClick={() => rerender()}>Force Rerender</button>
+</div>
+<pre>{JSON.stringify(pagination, null, 2)}</pre> */
+}
 function DebouncedInput({
   value: initialValue,
   onChange,

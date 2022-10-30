@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 
@@ -9,11 +9,23 @@ import Button from "../core/components/LoadingButton";
 // import Button from "../../app/common/buttons/Button";
 // import Checkbox from "../../app/common/checkboxes/Checkbox";
 
-import { APP_NAME } from "./../config";
+import { APP_NAME, POST_LOGIN_REDIRECT_URL } from "./../config";
 import PasswordInput from "./../core/components/Form/PasswordInput";
-import { Dialog } from '@headlessui/react';
+import { useEffect } from "react";
+import { notify } from "../utils/notify";
+import { useRouter } from "next/router";
 
 const LoginForm = () => {
+  const session = useSession();
+  const router  = useRouter();
+
+  useEffect(() => {
+    if (session.status === "authenticated") {
+      notify("You are already logged in", "info");
+      router.push(POST_LOGIN_REDIRECT_URL);
+    }
+  }, [session]);
+
   const defaultValues = {
     username: "",
     password: "",
@@ -38,11 +50,12 @@ const LoginForm = () => {
       await signIn("credentials", {
         email: values.username,
         password: values.password,
+        callbackUrl: POST_LOGIN_REDIRECT_URL,
         //   redirect: false
       });
       //   await userStore.login(values);
-    } catch (err: any) {
-      toast.error(err?.response.data);
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
   return (
@@ -56,10 +69,9 @@ const LoginForm = () => {
             <Image
               src="/assets/logo.png"
               alt=""
-            objectFit="contain"
+              objectFit="contain"
               width={300}
               height={300}
-
             />
           </div>
           <div className="w-full py-10 px-5 md:w-1/2 md:px-10">
@@ -97,10 +109,7 @@ const LoginForm = () => {
             </div>
             <div className="h-2"></div>
 
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-6"
-            >
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <TextInput
                 label="Όνομα Χρήστη"
                 {...register("username", {
@@ -138,12 +147,13 @@ const LoginForm = () => {
               </div>
               {/* <div className="h-1"></div> */}
               <div>
-                <button
-                  className={clsx("btn-md btn w-full", true && "loading")}
+                <Button
+                  loading={isSubmitting}
                   type="submit"
+                  disabled={isSubmitting}
                 >
                   SUBMIT
-                </button>
+                </Button>
               </div>
               <div className="h-2"></div>
             </form>
