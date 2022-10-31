@@ -1,6 +1,10 @@
-import { ReactElement } from "react";
+// import { ReactElement } from "react";
 
-const DeleteForm:React.FC<any> = (props) => {
+interface DProps {
+  id?: string | number;
+}
+const DeleteForm = ({ id }: DProps) => {
+  console.log(id);
   return <div>hello there</div>;
 };
 

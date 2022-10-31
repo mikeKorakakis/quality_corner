@@ -9,7 +9,8 @@ const title = "Edit Post";
 interface Props {
   id?: number;
 }
-const EditForm: React.FC<Props> = ({ id }) => {
+const EditForm = ({ id }: Props) => {
+  console.log(id);
   const defaultValues = {
     title: "",
     body: "",
@@ -32,21 +33,24 @@ const EditForm: React.FC<Props> = ({ id }) => {
       toast.error(error.message);
     }
   };
-
   if (id) {
-    const { data, isLoading } = trpc.feed.get.useQuery({ id });
-    if (data && !isLoading) reset(data);
-    //   reset(data);
+    const { data, isLoading } = trpc.feed.get.useQuery(
+      { id },
+      {
+        onSuccess: (data) => {
+          if (data) reset(data);
+        },
+      }
+    );
   }
 
   return (
-    <div className="w-full py-10 px-5 md:px-10">
-      <div className="mb-10 text-center">
+    <div className="w-[28rem] py-10 px-5 md:px-10">
+      <div className="mb-5 text-center">
         <h1 className="font-mono text-3xl font-bold text-gray-900">{title}</h1>
       </div>
-      <div className="h-2"></div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
         <TextInput
           label="Post Title"
           {...register("title", {

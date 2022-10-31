@@ -13,13 +13,17 @@ import {
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import { Transition, Dialog, Menu, Disclosure } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import { Fragment, ReactNode, useState } from "react";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "../../../config";
 
+interface Props {
+  children: ReactNode;
+}
+
 const title = APP_NAME;
-const Layout: React.FC<any> = ({ children }) => {
+const Layout = ({ children }: Props) => {
   const isLoggedIn = true;
   const router = useRouter();
 
@@ -322,7 +326,7 @@ const Layout: React.FC<any> = ({ children }) => {
           </div>
         </div>
       </div>
-      <div className=" flex flex-1 flex-col xl:pl-64 h-screen">
+      <div className=" flex h-screen flex-1 flex-col xl:pl-64">
         <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-base-100  shadow">
           <button
             type="button"
@@ -391,7 +395,7 @@ const Layout: React.FC<any> = ({ children }) => {
           <main>
             <div className="max-w-8xl mx-auto h-full sm:px-6 xl:px-8">
               <div className="h-full px-4 py-8 sm:px-0">
-                <div className="h-full m-auto">{children}</div>
+                <div className="m-auto h-full">{children}</div>
               </div>
               {/* /End replace */}
             </div>

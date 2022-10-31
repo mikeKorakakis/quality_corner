@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { Dispatch, ReactElement, SetStateAction, useEffect } from "react";
+import { Dispatch, ReactElement, SetStateAction } from "react";
 
 interface Props {
   id: string;
@@ -16,7 +16,7 @@ interface Props {
   rejectAction?: (a: any) => any;
 }
 
-const Modal: React.FC<Props> = ({
+const Modal = ({
   id,
   title,
   buttonText = "Open Modal",
@@ -29,25 +29,16 @@ const Modal: React.FC<Props> = ({
   rejectButtonText,
   acceptAction,
   rejectAction,
-}) => {
-  useEffect(() => {
-    const md = document.getElementById(id) as HTMLInputElement;
-    if (md) md.checked = open;
-  }, [open]);
-
+}: Props) => {
   const handleOpen = () => {
-    const md = document.getElementById(id) as HTMLInputElement;
-    if (md && !md.checked) {
-      md.checked = true;
-    }
     setOpen(() => true);
   };
   const handleClose = () => {
-    const md = document.getElementById(id) as HTMLInputElement;
-    if (md) {
-      md.checked = false;
-    }
     setOpen(() => false);
+  };
+
+  const handleChange = (evt: any) => {
+    evt.target.checked ? handleOpen() : handleClose();
   };
 
   return (
@@ -57,7 +48,13 @@ const Modal: React.FC<Props> = ({
       </label>
 
       {/* Put this part before </body> tag */}
-      <input type="checkbox" id={id} className="modal-toggle" />
+      <input
+        type="checkbox"
+        id={id}
+        className="modal-toggle"
+        checked={open}
+        onChange={handleChange}
+      />
       <label htmlFor={id} className="modal cursor-pointer ">
         <label className={clsx("modal-box relative max-w-5xl", widthClass)}>
           <label

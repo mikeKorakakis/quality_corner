@@ -1,7 +1,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { trpc } from "../utils/trpc";
 
-const Test: React.FC = () => {
+const Test = () => {
   const hello = trpc.example.hello.useQuery({ text: "from tRPC" });
   console.log(hello.data);
   return (
@@ -21,7 +21,7 @@ const Test: React.FC = () => {
 
 export default Test;
 
-const AuthShowcase: React.FC = () => {
+const AuthShowcase = () => {
   const { data: secretMessage } = trpc.auth.getSecretMessage.useQuery();
 
   const { data: sessionData } = useSession();

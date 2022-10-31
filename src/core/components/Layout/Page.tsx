@@ -1,10 +1,11 @@
-import { getSession, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { ReactNode, useEffect } from "react";
 import { APP_NAME } from "../../../config";
 import Layout from "./Layout";
 import LoadingPage from "./LoadingPage";
+import ModalContainer from "./Modal/ModalContainer";
 
 interface Props {
   children: ReactNode;
@@ -13,12 +14,7 @@ interface Props {
   auth?: boolean;
 }
 
-const Page: React.FC<Props> = ({
-  children,
-  title = "",
-  navbar = true,
-  auth = true,
-}) => {
+const Page = ({ children, title = "", navbar = true, auth = true }: Props) => {
   const router = useRouter();
   const { data: sessionData, status } = useSession();
 
@@ -28,13 +24,13 @@ const Page: React.FC<Props> = ({
     }
   }, [status, auth, sessionData, router]);
 
-  if (status === "loading") return null; // <LoadingPage page={true}/>;
+  if (status === "loading") return <LoadingPage page={true} />;
   return (
     <div className="h-full bg-gray-50">
       <Head>
         <title>{`${title} | ${APP_NAME}`}</title>
       </Head>
-      {/* <input type="checkbox" id="my-modal" className="modal-toggle" /> */}
+      <ModalContainer id="my-modal-46"  />
       {navbar ? (
         <Layout>{children}</Layout>
       ) : (

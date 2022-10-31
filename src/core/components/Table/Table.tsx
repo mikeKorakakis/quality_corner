@@ -16,20 +16,22 @@ import {
   PaginationState,
   SortingState,
   useReactTable,
+  getFacetedMinMaxValues,
+  getFacetedUniqueValues,
 } from "@tanstack/react-table";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { notify } from "../../../utils/notify";
 import { AppRouterOutputTypes, trpc } from "../../../utils/trpc";
+import { useModalStore } from "../../stores/modalStore";
 import Skeleton from "../Layout/Skeleton";
-import TableActions from "./TableActions";
 
 interface Props {
   router: "feed";
   procedure: "getAll";
   columnMap: Map<unknown, unknown>;
-  EditForm?: React.FC;
-  DeleteForm?: React.FC;
+  EditForm?: (id?: any) => JSX.Element;
+  DeleteForm?: (id?: any) => JSX.Element;
 }
 
 export default function Home({
@@ -42,6 +44,8 @@ export default function Home({
   type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof procedure];
   type DataType = ProcedureOutput["data"][0];
   type DataTypeKeys = keyof DataType;
+
+  const { openModal } = useModalStore();
 
   const columnHelper = createColumnHelper<DataType>();
   //   const columns = useMemo(() => {
@@ -62,22 +66,47 @@ export default function Home({
       });
     }
   });
+
   if (EditForm || DeleteForm) {
     columns.push(
       columnHelper.display({
         id: "edit",
+        header: () => {
+          return EditForm && (
+            <button
+              className="btn no-underline btn-sm"
+              onClick={() => {
+                openModal(<EditForm />);
+              }}
+            >
+              Create
+            </button>
+          );
+        },
         cell: (info) => {
           return (
-            <TableActions
-              EditForm={
-                (EditForm && EditForm({ id: info.row.original.id })) ??
-                undefined
-              }
-              DeleteForm={
-                (DeleteForm && DeleteForm({ id: info.row.original.id })) ??
-                undefined
-              }
-            />
+            <>
+              {EditForm && (
+                <button
+                  className="link block text-sm text-info no-underline"
+                  onClick={() => {
+                    openModal(<EditForm id={info.row.original.id} />);
+                  }}
+                >
+                  Edit
+                </button>
+              )}
+              {DeleteForm && (
+                <button
+                  className="link text-sm text-error no-underline"
+                  onClick={() => {
+                    openModal(<DeleteForm id={info.row.original.id} />);
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </>
           );
         },
       })
@@ -140,6 +169,8 @@ export default function Home({
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFacetedMinMaxValues: getFacetedMinMaxValues(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     manualPagination: true,
     manualFiltering: true,
     manualSorting: true,
@@ -201,7 +232,7 @@ export default function Home({
         ) : (
           table
             .getRowModel()
-            .rows.slice(0, 10)
+            .rows.slice(0, pagination.pageSize)
             .map((row) => {
               return (
                 <tr key={row.id}>
