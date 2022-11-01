@@ -3,8 +3,11 @@ import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import TextInput from "../../core/components/Form/TextInput";
 import Button from "../../core/components/LoadingButton";
+import { createSchema } from "../../server/trpc/router/feed";
 import { trpc } from "../../utils/trpc";
 const title = "Edit Post";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 interface Props {
   id?: number;
@@ -21,18 +24,19 @@ const EditForm = ({ id }: Props) => {
     reset,
     formState: { errors, isSubmitting },
     handleSubmit,
-  } = useForm({ defaultValues });
+  } = useForm({ defaultValues, resolver: zodResolver(createSchema) });
 
-  const onSubmit = async (values: typeof defaultValues) => {
+  const onSubmit = async (values: z.infer<typeof createSchema>) => {
     try {
       console.log("edit");
-      //   redirect: false
-
-      //   await userStore.login(values);
+      await trpc.feed.create.useMutation.mutate({
+        ...values
+      });
     } catch (error: any) {
       toast.error(error.message);
     }
   };
+
   if (id) {
     const { data, isLoading } = trpc.feed.get.useQuery(
       { id },
@@ -53,9 +57,7 @@ const EditForm = ({ id }: Props) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-1">
         <TextInput
           label="Post Title"
-          {...register("title", {
-            required: true,
-          })}
+          {...register("title")}
           name="title"
           type="title"
           autoComplete="title"
@@ -64,9 +66,7 @@ const EditForm = ({ id }: Props) => {
 
         <TextInput
           label="Post Body"
-          {...register("body", {
-            required: true,
-          })}
+          {...register("body")}
           name="body"
           type="body"
           autoComplete="body"

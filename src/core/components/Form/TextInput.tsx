@@ -1,7 +1,6 @@
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, {
-  DetailedHTMLProps,
   forwardRef,
   InputHTMLAttributes,
 } from "react";
@@ -18,6 +17,7 @@ const TextInput = forwardRef<
   Props & InputHTMLAttributes<HTMLInputElement>
 >(({ label, name, error, disabled, ...rest }, ref) => {
   return (
+    <>
     <div className="form-control w-full">
       {label && (
         <label className="label">
@@ -50,6 +50,7 @@ const TextInput = forwardRef<
       </div>
       {error && <p className="mt-2 text-sm text-error">{error}</p>}
     </div>
+    </>
   );
 });
 

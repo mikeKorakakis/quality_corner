@@ -116,7 +116,7 @@ const LoginForm = () => {
                   required: true,
                 })}
                 name="username"
-                type="username"
+                type="text"
                 autoComplete="username"
                 error={errors.username && "Το όνομα χρήστη είναι απαραίτητο"}
               />
