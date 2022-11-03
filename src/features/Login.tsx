@@ -21,7 +21,7 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (session.status === "authenticated") {
-      notify("You are already logged in", "info");
+      notify({message: "You are already logged in", type: "info"});
       router.push(POST_LOGIN_REDIRECT_URL);
     }
   }, [session]);

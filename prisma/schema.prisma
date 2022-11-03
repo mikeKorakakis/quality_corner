@@ -20,10 +20,24 @@ model Example {
     updatedAt DateTime @updatedAt
 }
 
+model PostCategory {
+    id       String   @id @default(cuid())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    name      String
+    posts     Post[]
+
+}
+
 model Post {
     id       Int    @id @default(autoincrement())
     title    String
     body     String
+    date     DateTime?
+    image    String?
+    published Boolean? 
+    category PostCategory @relation(fields: [categoryId], references: [id])
+    categoryId String
     author   User   @relation(fields: [authorId], references: [id])
     authorId String
 }

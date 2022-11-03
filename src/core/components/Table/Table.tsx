@@ -20,7 +20,6 @@ import {
   getFacetedUniqueValues,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "react-toastify";
 import { notify } from "../../../utils/notify";
 import { AppRouterOutputTypes, trpc } from "../../../utils/trpc";
 import { useModalStore } from "../../stores/modalStore";
@@ -62,7 +61,24 @@ export default function Home({
       return columnHelper.accessor(key, {
         id: key.toString(),
         header: () => <span>{title}</span>,
-        cell: (info) => <i>{info.getValue()}</i>,
+        cell: (info) => {
+          const value = info.getValue();
+          if (typeof value === "boolean") {
+            return (
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  defaultChecked={value}
+                  className="checkbox m-auto"
+                />
+              </div>
+            );
+          } else if (typeof value === "object" && value instanceof Date) {
+            return value.toLocaleString().split(",")[0];
+          } else {
+            return <i>{value}</i>;
+          }
+        },
       });
     }
   });
@@ -72,15 +88,17 @@ export default function Home({
       columnHelper.display({
         id: "edit",
         header: () => {
-          return EditForm && (
-            <button
-              className="btn no-underline btn-sm"
-              onClick={() => {
-                openModal(<EditForm />);
-              }}
-            >
-              Create
-            </button>
+          return (
+            EditForm && (
+              <button
+                className="btn btn-sm no-underline"
+                onClick={() => {
+                  openModal(<EditForm />);
+                }}
+              >
+                Create
+              </button>
+            )
           );
         },
         cell: (info) => {
@@ -137,7 +155,7 @@ export default function Home({
   );
   useEffect(() => {
     if (error) {
-      notify(error.message, "error");
+      notify({ message: error.message, type: "error" });
     }
   }, [error]);
 
@@ -175,10 +193,14 @@ export default function Home({
     manualFiltering: true,
     manualSorting: true,
     debugTable: true,
+    // sortDescFirst: true,
+    initialState: {
+      sorting: [{ id: "title", desc: true }],
+    },
   });
 
   return (
-    <table className="z-0 table w-fit rounded-3xl shadow-lg">
+    <table className="z-0 m-auto table w-fit rounded-3xl shadow-lg">
       <thead>
         {table.getHeaderGroups().map((headerGroup) => (
           <tr key={headerGroup.id}>
@@ -236,8 +258,15 @@ export default function Home({
             .map((row) => {
               return (
                 <tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => {
-                    return (
+                  {row.getVisibleCells().map((cell, i) => {
+                    return i === 0 ? (
+                      <th key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </th>
+                    ) : (
                       <td key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -253,6 +282,7 @@ export default function Home({
       </tbody>
       <tfoot className=" rounded-b-3xl">
         <tr className="w-full py-2">
+            <th></th>
           <th colSpan={20}>
             <div className="btn-group ml-2  ">
               <button
@@ -424,8 +454,8 @@ function Filter({
   ) : (
     <>
       <datalist id={column.id + "list"}>
-        {sortedUniqueValues.slice(0, 5000).map((value: any) => (
-          <option value={value} key={value} />
+        {sortedUniqueValues.slice(0, 5000).map((value: any, i) => (
+          <option value={value} key={i} />
         ))}
       </datalist>
       <DebouncedInput

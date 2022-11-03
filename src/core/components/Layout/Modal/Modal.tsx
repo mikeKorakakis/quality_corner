@@ -55,8 +55,8 @@ const Modal = ({
         checked={open}
         onChange={handleChange}
       />
-      <label htmlFor={id} className="modal cursor-pointer ">
-        <label className={clsx("modal-box relative max-w-5xl", widthClass)}>
+      <label htmlFor={id} className="modal cursor-pointer  ">
+        <label className={clsx("modal-box relative max-w-5xl overflow-x-hidden", widthClass)}>
           <label
             onClick={handleClose}
             className="btn-error btn-sm btn-circle btn absolute right-2 top-2 text-neutral-content hover:bg-red-500 "

@@ -1,27 +1,16 @@
 import { router, publicProcedure } from "../trpc";
-import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { getAllSchema } from "../../../types/zod/general";
+import { deleteSchema,createSchema, updateSchema } from "../../../types/zod/feed";
+import { getSchema } from './../../../types/zod/feed';
+import { delay } from "../../../utils/delay";
 
-export const getAllSchema = z.object({
-  pageIndex: z.number().min(0).optional().default(0),
-  pageSize: z.number().min(1).max(50).optional().default(10),
-  sorting: z.array(z.object({ id: z.string(), desc: z.boolean() }).optional()),
-  columnFilters: z.array(
-    z.object({ id: z.string(), value: z.unknown() }).optional()
-  ),
-});
-
-export const createSchema = z.object({
-  title: z.string(),
-  body: z.string(),
-});
-
-export const updateSchema = createSchema.merge(z.object({ id: z.number() }));
 
 export const feedRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
     let colFilters: Array<{ [x: string]: { contains: string } }> = [];
 
-    let sorting: Array<{ [x: string]: "asc" | "desc" }> = [];
+    let sorting: Array<{ [x: string]: "asc" | "desc" }> = [{id:'desc'}];
 
     if (input.columnFilters && input.columnFilters.length > 0) {
       colFilters = input.columnFilters.map((f) => {
@@ -34,9 +23,13 @@ export const feedRouter = router({
       sorting = input.sorting.map((f) => {
         return f ? { [f.id]: f.desc ? "desc" : "asc" } : {};
       });
-    }
+    }    
 
-    const postCount = await ctx.prisma.post.count();
+    const postCount = await ctx.prisma.post.count({
+      where: {
+        AND: colFilters,
+      },
+    });
     const posts = await ctx.prisma.post.findMany({
       where: {
         AND: colFilters,
@@ -45,19 +38,23 @@ export const feedRouter = router({
       take: input.pageSize,
       orderBy: sorting,
     });
-    return { data: posts, pageCount: postCount };
+
+    const pageCount = Math.ceil(postCount / input.pageSize);
+    return { data: posts, pageCount };
   }),
 
   get: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async ({ input, ctx }) => {
+    .input(getSchema).query(async ({ input, ctx }) => {
+        delay(2000)
       return ctx.prisma.post.findUnique({ where: { id: input.id } });
     }),
 
   create: publicProcedure
     .input(createSchema)
-    .mutation(async ({ input, ctx }) => {
-      if (!ctx?.session?.user?.id) throw new Error("Not logged in");
+    .mutation(async ({ input, ctx }) => {        
+      if (!ctx?.session?.user?.id) {
+        throw new TRPCError({ message: "Not logged in", code: "FORBIDDEN" });
+      }
       const authorId = ctx?.session?.user?.id;
       const inputWithUserId = { ...input, authorId };
       return ctx.prisma.post.create({ data: inputWithUserId });
@@ -67,5 +64,11 @@ export const feedRouter = router({
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
       return ctx.prisma.post.update({ where: { id: input.id }, data: input });
+    }),
+
+    delete: publicProcedure
+    .input(deleteSchema)
+    .mutation(async ({ input, ctx }) => {
+      return ctx.prisma.post.delete({ where: { id: input.id }});
     }),
 });

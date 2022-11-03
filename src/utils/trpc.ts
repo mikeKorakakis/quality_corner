@@ -8,6 +8,7 @@ import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
 
 import type { AppRouter } from "../server/trpc/router/_app";
+import { delay } from "./delay";
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url
@@ -18,7 +19,7 @@ const getBaseUrl = () => {
 export const trpc = createTRPCNext<AppRouter>({
   config() {
     return {
-      transformer: superjson,
+     transformer: superjson,
       links: [
         loggerLink({
           enabled: (opts) =>
@@ -27,13 +28,16 @@ export const trpc = createTRPCNext<AppRouter>({
         }),
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
+          fetch: async (input, init) => {
+            // await delay(1000);
+            return fetch(input, init);
+          }
         }),
       ],
     };
   },
   ssr: false,
 });
-
 /**
  * Inference helpers
  * @example type HelloOutput = AppRouterTypes['example']['hello']['output']

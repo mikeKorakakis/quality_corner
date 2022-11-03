@@ -12,7 +12,6 @@ const Modal = ({ id, widthClass = "w-fit" }: Props) => {
   const { closeModal } = useModalStore();
 
   const handleChange = (evt: any) => {
-    console.log(evt);
     if (!evt.target.checked) closeModal();
   };
 

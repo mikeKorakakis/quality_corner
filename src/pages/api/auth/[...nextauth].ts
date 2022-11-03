@@ -12,6 +12,13 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
   },
+  callbacks: {
+    async session({ session, token, user }) {
+      // Send properties to the client, like an access_token and user id from a provider.
+            
+      return {...session,user:{...session.user, id: token.sub || '1'}}
+    }
+  },
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({

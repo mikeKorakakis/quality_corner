@@ -25,6 +25,7 @@
     "next": "12.3.1",
     "next-auth": "^4.15.0",
     "react": "18.2.0",
+    "react-datepicker": "^4.8.0",
     "react-dom": "18.2.0",
     "react-hook-form": "^7.38.0",
     "react-toastify": "^9.0.8",
@@ -33,8 +34,10 @@
     "zustand": "^4.1.4"
   },
   "devDependencies": {
+    "@tanstack/react-query-devtools": "^4.14.1",
     "@types/node": "^18.0.0",
     "@types/react": "18.0.14",
+    "@types/react-datepicker": "^4.8.0",
     "@types/react-dom": "18.0.5",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",
