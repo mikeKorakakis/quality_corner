@@ -34,6 +34,9 @@ export const feedRouter = router({
       where: {
         AND: colFilters,
       },
+      include: {
+        category: true
+      },
       skip: input.pageIndex * input.pageSize,
       take: input.pageSize,
       orderBy: sorting,

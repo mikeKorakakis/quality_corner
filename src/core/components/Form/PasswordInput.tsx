@@ -1,18 +1,19 @@
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import React, { forwardRef, InputHTMLAttributes, useState } from "react";
+import Skeleton from "./Skeleton";
 
 interface Props {
   label?: string;
   name: string;
   error?: string;
-  disabled?: boolean;
+  loading?: boolean;
 }
 
 const PasswordInput = forwardRef<
   HTMLInputElement,
   Props & InputHTMLAttributes<HTMLInputElement>
->(({ label, name, error, disabled, className, ...rest }, ref) => {
+>(({ label, name, error, loading, disabled, className, ...rest }, ref) => {
   const [visible, setVisible] = useState(false);
   return (
     <>
@@ -25,7 +26,7 @@ const PasswordInput = forwardRef<
           </label>
         )}
         <div className="relative mt-1 rounded-md shadow-sm">
-          <input
+          {loading ? <Skeleton/> : <input
             id={name}
             autoComplete={name}
             name={name}
@@ -38,7 +39,7 @@ const PasswordInput = forwardRef<
               error && " input-error",
               className
             )}
-          />
+          /> }
           <div className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3 ">
             {!visible ? (
               <EyeSlashIcon

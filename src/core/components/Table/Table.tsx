@@ -20,15 +20,25 @@ import {
   getFacetedUniqueValues,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import { AppRouterNames, AppRouterOutputTypes } from "../../../server/trpc/router/_app";
 import { notify } from "../../../utils/notify";
-import { AppRouterOutputTypes, trpc } from "../../../utils/trpc";
+import { trpc } from "../../../utils/trpc";
 import { useModalStore } from "../../stores/modalStore";
 import Skeleton from "../Layout/Skeleton";
 
+// type GetKeys<U> = U extends Record<infer K, any> ? K : never;
+
+// type UnionToIntersection<U extends object> = {
+//   [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never;
+// };
+// type Transformed = UnionToIntersection<test>
+
+
+
 interface Props {
-  router: "feed";
+  router: AppRouterNames;
   procedure: "getAll";
-  columnMap: Map<unknown, unknown>;
+  columnMap: Map<unknown, string>;
   EditForm?: (id?: any) => JSX.Element;
   DeleteForm?: (id?: any) => JSX.Element;
 }
@@ -40,17 +50,18 @@ export default function Home({
   EditForm,
   DeleteForm,
 }: Props) {
+    const { openModal } = useModalStore();
+    
+
   type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof procedure];
   type DataType = ProcedureOutput["data"][0];
-  type DataTypeKeys = keyof DataType;
+//   type DataTypeKeys = UnionToIntersection<DataType>;
 
-  const { openModal } = useModalStore();
+  const columnsArray = Array.from(columnMap);
 
   const columnHelper = createColumnHelper<DataType>();
-  //   const columns = useMemo(() => {
-  const columnsArray = Array.from(columnMap);
   const columns = columnsArray.map((innerArr) => {
-    const key = innerArr[0] as DataTypeKeys | "display";
+    const key = innerArr[0] as any// DataTypeKeys | "display";
     const title = innerArr[1] as string;
     if (key === "display") {
       return columnHelper.display({
@@ -74,8 +85,14 @@ export default function Home({
               </div>
             );
           } else if (typeof value === "object" && value instanceof Date) {
-            return value.toLocaleString().split(",")[0];
-          } else {
+            return <i>{value.toLocaleString().split(",")[0]}</i>;
+          } else if (
+            value &&
+            typeof value === "object" &&
+            value.hasOwnProperty("name")
+          ) {
+            return <i>{value["name"]}</i>;
+          } else if (typeof value === "string" || typeof value === "number") {
             return <i>{value}</i>;
           }
         },
@@ -153,6 +170,7 @@ export default function Home({
     fetchDataOptions,
     { keepPreviousData: true }
   );
+
   useEffect(() => {
     if (error) {
       notify({ message: error.message, type: "error" });
@@ -282,7 +300,7 @@ export default function Home({
       </tbody>
       <tfoot className=" rounded-b-3xl">
         <tr className="w-full py-2">
-            <th></th>
+          <th></th>
           <th colSpan={20}>
             <div className="btn-group ml-2  ">
               <button

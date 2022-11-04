@@ -7,7 +7,7 @@ import { useModalStore } from "./../../core/stores/modalStore";
 
 
 interface Props {
-  id?: string | number;
+  id?: any;
 }
 const title = "Delete Entry";
 const body = "Are you sure you want to delete the entry?";

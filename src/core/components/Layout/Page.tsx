@@ -1,10 +1,7 @@
-import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useRouter } from "next/router";
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { APP_NAME } from "../../../config";
-import Layout from "./Layout";
-import LoadingPage from "./LoadingPage";
+import Layout from "./Layout/Index";
 import ModalContainer from "./Modal/ModalContainer";
 
 interface Props {
@@ -14,19 +11,10 @@ interface Props {
   auth?: boolean;
 }
 
-const Page = ({ children, title = "", navbar = true, auth = true }: Props) => {
-  const router = useRouter();
-  const { data: sessionData, status } = useSession();
+const Page = ({ children, title = "", navbar = true }: Props) => {
 
-  useEffect(() => {
-    if (auth && !sessionData && status !== "loading") {
-      router.push("/auth/signin");
-    }
-  }, [status, auth, sessionData, router]);
-
-  if (status === "loading") return <LoadingPage page={true} />;
   return (
-    <div className="h-full bg-gray-50">
+    <div className="h-full bg-base-300">
       <Head>
         <title>{`${title} | ${APP_NAME}`}</title>
       </Head>

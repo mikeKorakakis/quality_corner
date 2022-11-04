@@ -1,13 +1,13 @@
 import Table from "../../core/components/Table/Table";
-import EditForm from "./EditForm";
+import FeedEditForm from "./FeedEditForm";
 import DeleteForm from "./DeleteForm";
 
-const columns = new Map<string, string | JSX.Element>([
-  ["title", "Title Header"],
-  ["body", "Body Header"],
-  ["published", "Published Header"],
-  ["categoryId", "Category Header"],
-  ["date", "Date Header"],
+const columns = new Map<string, string>([
+  ["title", "Title"],
+  ["body", "Body"],
+  ["published", "Published"],
+  ["category", "Category"],
+  ["date", "Date"],
 ]);
 
 const Feed = () => {
@@ -17,7 +17,7 @@ const Feed = () => {
         router="feed"
         procedure="getAll"
         columnMap={columns}
-        EditForm={EditForm}
+        EditForm={FeedEditForm}
         DeleteForm={DeleteForm}
       />
     </div>

@@ -1,12 +1,13 @@
 import Page from "../core/components/Layout/Page";
-import Test from '../features/Test2';
-import { notify } from "../utils/notify";
-import { useEffect } from 'react';
+import Feed from "../features/Feed/FeedList";
+import FeedEditForm from './../features/Feed/FeedEditForm';
 
-export default function TestPage() {
+const Home = () => {
   return (
-    <Page navbar={false} title="Test" auth={false}>
-      <Test />
+    <Page title="Feed">
+      <FeedEditForm id={2000} />
     </Page>
   );
-}
+};
+
+export default Home;

@@ -2,12 +2,14 @@ import clsx from "clsx";
 import React from "react";
 import ReactDatePicker, { ReactDatePickerProps } from "react-datepicker";
 import { Controller } from "react-hook-form";
+import Skeleton from "./Skeleton";
 
 interface Props {
   control: any;
   label?: string;
   name: string;
   error?: string;
+  loading?: boolean;
   disabled?: boolean;
 }
 export default function DateInput({
@@ -15,6 +17,7 @@ export default function DateInput({
   name,
   control,
   error,
+  loading,
   disabled,
   className,
   ...rest
@@ -22,34 +25,38 @@ export default function DateInput({
   return (
     <div className="form-control w-full">
       {label && (
-          <label className="label">
+        <label className="label">
           <span className={clsx("label-text", error && "text-error")}>
             {label}
           </span>
         </label>
       )}
-      <Controller
-        control={control}
-        rules={{ required: true }}
-        name={name}
-        render={({ field }) => (
-          <ReactDatePicker
-            disabled={disabled}
-            {...field}
-            {...rest}
-            className={clsx(
-              "input-bordered input w-full",
-              error && "input-error",
-              className
-            )}
-            name={name}
-            // onChange={onChange}
-            // onBlur={onBlur}
-            selected={(field.value && new Date(field.value)) || null}
-            value={(field.value && new Date(field.value)) || null}
-          />
-        )}
-      />
+      {loading ? (
+        <Skeleton />
+      ) : (
+        <Controller
+          control={control}
+        //   rules={{ required: true }}
+          name={name}
+          render={({ field }) => (
+            <ReactDatePicker
+              disabled={disabled}
+              {...field}
+              {...rest}
+              className={clsx(
+                "input-bordered input w-full",
+                error && "input-error",
+                className
+              )}
+              name={name}
+              // onChange={onChange}
+              // onBlur={onBlur}
+              selected={(field.value && new Date(field.value)) || null}
+              value={(field.value && new Date(field.value)) || null}
+            />
+          )}
+        />
+      )}
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </div>
   );

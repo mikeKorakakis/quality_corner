@@ -7,6 +7,7 @@ import {
   getSchema,
   updateSchema,
 } from "../../../types/zod/postCategory";
+import { delay } from "../../../utils/delay";
 
 export const postCategoryRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
@@ -20,6 +21,7 @@ export const postCategoryRouter = router({
           : {};
       });
     }
+
     if (input.sorting && input.sorting.length > 0) {
       sorting = input.sorting.map((f) => {
         return f ? { [f.id]: f.desc ? "desc" : "asc" } : {};

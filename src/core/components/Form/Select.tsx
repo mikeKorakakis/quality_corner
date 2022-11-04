@@ -1,18 +1,20 @@
 import clsx from "clsx";
 import React, { forwardRef, InputHTMLAttributes } from "react";
+import { AppRouterForOptions } from "../../../server/trpc/router/_app";
 import { trpc } from "../../../utils/trpc";
+import Skeleton from "./Skeleton";
 
 interface Options {
-  text: string;
-  value: string;
+  text: string ;
+  value: string | number;
 }
 interface Props {
-  //   selectedValue: number;
   label?: string;
   error?: string;
   name: string;
-  router: string;
-  procedure: string;
+  router: AppRouterForOptions;
+//   procedure: string;
+  loading?: boolean;
   disabled?: boolean;
   options?: Options[];
 }
@@ -27,8 +29,9 @@ const Select: React.FC<any> = forwardRef<
       error,
       name,
       disabled,
+      loading,
       options,
-      //   selectedValue,
+      router,
       className,
       ...rest
     },
@@ -43,7 +46,7 @@ const Select: React.FC<any> = forwardRef<
       isLoading,
       isFetching,
       error: tError,
-    } = trpc["postCategory"]["getAll"].useQuery(
+    } = trpc[router]["getAll"].useQuery(
       {
         pageIndex: 0,
         pageSize: 1000,
@@ -69,41 +72,42 @@ const Select: React.FC<any> = forwardRef<
               </span>
             </label>
           )}
-          <div className="relative mt-1 rounded-md shadow-sm">
-            <select
-              //   defaultValue={
-              //     selectedValue ? parseInt(selectedValue.toString()) : 0
-              //   }
-              id={name}
-              name={name}
-              disabled={disabled}
-              autoComplete={name}
-              ref={ref}
-              {...rest}
-              className={clsx(
-                "select-bordered select w-full",
-                error && "select-error",
-                className
-              )}
-            >
-              <option value=""></option>
-              {opts.map(({ text, value }) => {
-                return (
-                  <option
-                    key={value}
-                    value={value}
-                    // selected={
-                    // 	selectedValue
-                    // 		? parseInt(value) ===
-                    // 		  parseInt(selectedValue.toString())
-                    // 		: false
-                    // }
-                  >
-                    {text}
-                  </option>
-                );
-              })}
-            </select>
+          <div className="relative mt-1 rounded-md">
+            {loading ? (
+              <Skeleton />
+            ) : (
+              <select
+                id={name}
+                name={name}
+                disabled={disabled}
+                autoComplete={name}
+                ref={ref}
+                {...rest}
+                className={clsx(
+                  "select-bordered select w-full",
+                  error && "select-error",
+                  className
+                )}
+              >
+                <option value=""></option>
+                {opts.map(({ text, value }) => {
+                  return (
+                    <option
+                      key={value}
+                      value={value}
+                      // selected={
+                      // 	selectedValue
+                      // 		? parseInt(value) ===
+                      // 		  parseInt(selectedValue.toString())
+                      // 		: false
+                      // }
+                    >
+                      {text}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
             {(isLoading || isFetching) && (
               <div className="pointer-events-none absolute inset-y-0 left-1/2 flex items-center pr-3">
                 <svg

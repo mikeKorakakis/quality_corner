@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+.file-input::file-selector-button{
+    text-transform: none;
+}
+
+
+
+
 html,
 body,
 #__next {

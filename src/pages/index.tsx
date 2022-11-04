@@ -1,10 +1,10 @@
 import Page from "../core/components/Layout/Page";
-import Login from "../features/Login";
+import Feed from "../features/Feed/FeedList";
 
 const Home = () => {
   return (
-    <Page navbar={false} title="Home" auth={false}>
-      <Login />
+    <Page title="Feed">
+      <Feed />
     </Page>
   );
 };
