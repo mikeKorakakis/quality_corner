@@ -34,7 +34,7 @@ const upload = multer({
 const uploadFile = upload.single("file");
 export default async function handler(req: any, res: any) {
   if (req && req.method === "POST") {
-    uploadFile(req, res, (err) => {
+   await uploadFile(req, res, (err) => {
       if (err) {
         console.log(err);
         return res.status(500).json(err);

@@ -1,6 +1,6 @@
 import Table from "../../core/components/Table/Table";
 import FeedEditForm from "./FeedEditForm";
-import DeleteForm from "./DeleteForm";
+import FeedDeleteForm from './FeedDeleteForm';
 
 const columns = new Map<string, string>([
   ["title", "Title"],
@@ -18,7 +18,7 @@ const Feed = () => {
         procedure="getAll"
         columnMap={columns}
         EditForm={FeedEditForm}
-        DeleteForm={DeleteForm}
+        DeleteForm={FeedDeleteForm}
       />
     </div>
   );
