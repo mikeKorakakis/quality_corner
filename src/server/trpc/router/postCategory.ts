@@ -1,13 +1,12 @@
 import { router, publicProcedure } from "../trpc";
-import { z } from "zod";
-import { getAllSchema } from "../../../types/zod/general";
+import { getAllSchema } from "@/types/zod/general";
 import {
   deleteSchema,
   createSchema,
   getSchema,
   updateSchema,
-} from "../../../types/zod/postCategory";
-import { delay } from "../../../utils/delay";
+} from "@/types/zod/postCategory";
+import { delay } from "@/utils/delay";
 
 export const postCategoryRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {

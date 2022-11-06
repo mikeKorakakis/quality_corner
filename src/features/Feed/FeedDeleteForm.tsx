@@ -1,7 +1,7 @@
-import { useModalStore } from "../../core/stores/modalStore";
-import { notify } from "../../utils/notify";
-import { trpc } from "../../utils/trpc";
-import DeleteForm from "../../core/components/Table/DeleteForm";
+import { useModalStore } from "@/core/stores/modalStore";
+import { notify } from "@/utils/notify";
+import { trpc } from "@/utils/trpc";
+import DeleteForm from "@/core/components/Table/DeleteForm";
 
 interface Props {
   id?: string;

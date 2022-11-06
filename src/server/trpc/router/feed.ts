@@ -1,30 +1,14 @@
 import { router, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
-import { getAllSchema } from "../../../types/zod/general";
-import { deleteSchema,createSchema, updateSchema } from "../../../types/zod/feed";
-import { getSchema } from './../../../types/zod/feed';
-import { delay } from "../../../utils/delay";
-
+import { getAllSchema } from "@/types/zod/general";
+import { deleteSchema, createSchema, updateSchema } from "@/types/zod/feed";
+import { getSchema } from "@/types/zod/feed";
+import { delay } from "@/utils/delay";
+import { generateFilterParams } from "@/utils/generateFilterParams";
 
 export const feedRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
-    let colFilters: Array<{ [x: string]: { contains: string } }> = [];
-
-    let sorting: Array<{ [x: string]: "asc" | "desc" }> = [{id:'desc'}];
-
-    if (input.columnFilters && input.columnFilters.length > 0) {
-      colFilters = input.columnFilters.map((f) => {
-        return f && typeof f.value === "string"
-          ? { [f.id]: { contains: f.value } }
-          : {};
-      });
-    }
-    if (input.sorting && input.sorting.length > 0) {
-      sorting = input.sorting.map((f) => {
-        return f ? { [f.id]: f.desc ? "desc" : "asc" } : {};
-      });
-    }    
-
+    const { colFilters, sorting } = generateFilterParams(input);
     const postCount = await ctx.prisma.post.count({
       where: {
         AND: colFilters,
@@ -35,7 +19,7 @@ export const feedRouter = router({
         AND: colFilters,
       },
       include: {
-        category: true
+        category: true,
       },
       skip: input.pageIndex * input.pageSize,
       take: input.pageSize,
@@ -46,15 +30,14 @@ export const feedRouter = router({
     return { data: posts, pageCount };
   }),
 
-  get: publicProcedure
-    .input(getSchema).query(async ({ input, ctx }) => {
-        delay(2000)
-      return ctx.prisma.post.findUnique({ where: { id: input.id } });
-    }),
+  get: publicProcedure.input(getSchema).query(async ({ input, ctx }) => {
+    delay(2000);
+    return ctx.prisma.post.findUnique({ where: { id: input.id } });
+  }),
 
   create: publicProcedure
     .input(createSchema)
-    .mutation(async ({ input, ctx }) => {        
+    .mutation(async ({ input, ctx }) => {
       if (!ctx?.session?.user?.id) {
         throw new TRPCError({ message: "Not logged in", code: "FORBIDDEN" });
       }
@@ -69,9 +52,9 @@ export const feedRouter = router({
       return ctx.prisma.post.update({ where: { id: input.id }, data: input });
     }),
 
-    delete: publicProcedure
+  delete: publicProcedure
     .input(deleteSchema)
     .mutation(async ({ input, ctx }) => {
-      return ctx.prisma.post.delete({ where: { id: input.id }});
+      return ctx.prisma.post.delete({ where: { id: input.id } });
     }),
 });

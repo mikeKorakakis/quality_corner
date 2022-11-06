@@ -1,10 +1,10 @@
 import React from "react";
-import Checkbox from "../Form/Checkbox";
-import FileInput from "../Form/FileInput";
-import Select from "../Form/Select";
-import TextArea from "../Form/TextArea";
-import TextInput from "../Form/TextInput";
-import DateInput from './../Form/DateInput';
+import Checkbox from "@/core/components/Form/Checkbox";
+import FileInput from "@/core/components/Form/FileInput";
+import Select from "@/core/components/Form/Select";
+import TextArea from "@/core/components/Form/TextArea";
+import TextInput from "@/core/components/Form/TextInput";
+import DateInput from "@/core/components/Form/DateInput";
 
 interface Props {
   fields: any;
@@ -21,31 +21,34 @@ export default function EditFormFields({
   register,
   loading,
   errors,
-  control
+  control,
 }: Props) {
   return fields.map((field: any) => {
     switch (field.type) {
       case "text":
         return (
-          <TextInput
-            {...register(field.name)}
-            key={field.name}
-            label={field.label}
-            loading={loading}
-            error={errors[field.name]?.message?.toString()}
-          />
+          <>
+            <TextInput
+              {...register(field.name)}
+              key={field.name}
+              label={field.label}
+              loading={loading}
+              error={errors[field.name]?.message?.toString()}
+            />
+          </>
         );
-      case "file":
-        return (
-          <FileInput
-            {...register(field.name)}
-            key={field.name}
-            label={field.label}
-            value={getValues(field.name)}
-            loading={loading}
-            error={errors[field.name]?.message?.toString()}
-          />
-        );
+        case "file":
+          return (
+            <FileInput
+              {...register(field.name)}
+              key={field.name}
+              label={field.label}
+              value={getValues(field.name)}
+              loading={loading}
+              error={errors[field.name]?.message?.toString()}
+            />
+          );
+
       case "textarea":
         return (
           <TextArea

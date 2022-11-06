@@ -1,7 +1,7 @@
 import { GetServerSideProps, NextPage } from "next";
 import { getSession } from "next-auth/react";
-import Page from "../../core/components/Layout/Page";
-import Login from "../../features/Login";
+import Page from "@/core/components/Layout/Page";
+import Login from "@/features/Login";
 
 const SigninPage: NextPage = () => {
   return (

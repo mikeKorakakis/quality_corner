@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useModalStore } from "../../../stores/modalStore";
+import { useModalStore } from "@/core/stores/modalStore";
 
 interface Props {
   id: string;

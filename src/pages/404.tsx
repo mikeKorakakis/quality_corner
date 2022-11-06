@@ -1,5 +1,5 @@
-import Page from "../core/components/Layout/Page";
-import NotFound from "../features/NotFound";
+import Page from "@/core/components/Layout/Page";
+import NotFound from "@/features/NotFound";
 
 export default function NotFoundPage() {
   return (

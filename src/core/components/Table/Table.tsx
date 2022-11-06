@@ -20,11 +20,11 @@ import {
   getFacetedUniqueValues,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import { AppRouterNames, AppRouterOutputTypes } from "../../../server/trpc/router/_app";
-import { notify } from "../../../utils/notify";
-import { trpc } from "../../../utils/trpc";
-import { useModalStore } from "../../stores/modalStore";
-import Skeleton from "../Layout/Skeleton";
+import { AppRouterNames, AppRouterOutputTypes } from "@/server/trpc/router/_app";
+import { notify } from "@/utils/notify";
+import { trpc } from "@/utils/trpc";
+import { useModalStore } from "@/core/stores/modalStore";
+import Skeleton from "@/core/components/Layout/Skeleton";
 
 // type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 

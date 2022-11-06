@@ -16,7 +16,7 @@ import { Transition, Dialog, Menu, Disclosure } from "@headlessui/react";
 import { Fragment, ReactNode, useState } from "react";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
-import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "../../../config";
+import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "@/config";
 
 interface Props {
   children: ReactNode;

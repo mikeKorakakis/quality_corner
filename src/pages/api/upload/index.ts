@@ -1,14 +1,6 @@
 import multer from "multer";
 import path from "path";
-// import { NextApiRequest } from "next";
-// import { NextApiResponse } from "next";
 
-// const saveFile = async (file) => {
-//     const data = fs.readFileSync(file.path);
-//     fs.writeFileSync(`./public/${file.name}`, data);
-//     await fs.unlinkSync(file.path);
-//     return;
-//   };
 
 export const config = {
   api: {
@@ -31,7 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
 });
-const uploadFile = upload.single("file");
+const uploadFile = upload.single("filename");
 export default async function handler(req: any, res: any) {
   if (req && req.method === "POST") {
    await uploadFile(req, res, (err) => {
@@ -39,7 +31,7 @@ export default async function handler(req: any, res: any) {
         console.log(err);
         return res.status(500).json(err);
       }
-      return res.status(200).send({filename:req.file.filename});
+      return res.status(200).send({filename: req.file.filename});
     });
 //   } else {
     // Handle any other HTTP method

@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { ReactNode } from "react";
-import { APP_NAME } from "../../../config";
+import { APP_NAME } from "@/config";
 import Layout from "./Layout/Index";
 import ModalContainer from "./Modal/ModalContainer";
 

@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import React, { forwardRef, InputHTMLAttributes } from "react";
-import { AppRouterForOptions } from "../../../server/trpc/router/_app";
-import { trpc } from "../../../utils/trpc";
+import { AppRouterForOptions } from "@/server/trpc/router/_app";
+import { trpc } from "@/utils/trpc";
 import Skeleton from "./Skeleton";
 
 interface Options {

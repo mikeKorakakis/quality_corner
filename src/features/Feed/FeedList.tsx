@@ -1,4 +1,4 @@
-import Table from "../../core/components/Table/Table";
+import Table from "@/core/components/Table/Table";
 import FeedEditForm from "./FeedEditForm";
 import FeedDeleteForm from './FeedDeleteForm';
 

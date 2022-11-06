@@ -1,24 +1,17 @@
-import { FieldError, useForm } from "react-hook-form";
-import TextInput from "../../core/components/Form/TextInput";
-import Button from "../../core/components/LoadingButton";
-import { trpc } from "../../utils/trpc";
+import { useForm } from "react-hook-form";
+import Button from "@/core/components/LoadingButton";
+import { trpc } from "@/utils/trpc";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-// import { createSchema } from "../../types/zod/feed";
-import { notify } from "../../utils/notify";
-import { useModalStore } from "../../core/stores/modalStore";
-import Select from "../../core/components/Form/Select";
-import Checkbox from "../../core/components/Form/Checkbox";
-import DateInput from "../../core/components/Form/DateInput";
-import TextArea from "../../core/components/Form/TextArea";
-import {
-  AppRouterForOptions,
-  AppRouterNames,
-} from "../../server/trpc/router/_app";
-import FileInput from "../../core/components/Form/FileInput";
-import { createSchema } from "../../types/zod/feed";
-import { uploadFile } from "../../utils/uploadFile";
-import EditFormFields from "../../core/components/Table/EditFormFields";
+// import { createSchema } from "@/types/zod/feed";
+import { notify } from "@/utils/notify";
+import { useModalStore } from "@/core/stores/modalStore";
+import { AppRouterForOptions } from "@/server/trpc/router/_app";
+import { createSchema, CreateSchemaType } from "@/types/zod/feed";
+import { uploadFile } from "@/utils/uploadFile";
+import EditFormFields from "@/core/components/Table/EditFormFields";
+import { useRef } from "react";
+import { deleteFile } from "@/utils/deleteFile";
 
 // text of messages and labels
 const title = "Edit Post";
@@ -55,11 +48,11 @@ const fields: {
 ];
 
 interface Props {
-  id?: any;
+  id?: number;
 }
 
 const EditForm = ({ id }: Props) => {
-  type CreateSchemaType = z.infer<typeof createSchema>;
+  
 
   const defaultValues: CreateSchemaType & { error: any } = {
     title: "",
@@ -79,6 +72,8 @@ const EditForm = ({ id }: Props) => {
     handleSubmit,
   } = useForm({ defaultValues, resolver: zodResolver(createSchema) });
 
+  const previousFileField = useRef<string | null>();
+
   const { closeModal } = useModalStore();
 
   const utils = trpc.useContext();
@@ -96,8 +91,8 @@ const EditForm = ({ id }: Props) => {
 
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
     onSuccess() {
-      utils["feed"][getAllprocedure].invalidate();
-      utils["feed"][getProcedure].invalidate();
+      utils[router][getAllprocedure].invalidate();
+      utils[router][getProcedure].invalidate();
       notify({ message: editMessage, type: "success" });
       //   closeModal();
     },
@@ -117,7 +112,13 @@ const EditForm = ({ id }: Props) => {
       ) {
         const fileFieldName = fileField.name;
         const fileUrl = await uploadFile({ values, fileFieldName });
-        console.log({ ...values, id, [fileFieldName]: fileUrl });
+        if (previousFileField.current) {
+          try {
+            await deleteFile({filename: previousFileField.current});
+          } catch (error: any) {
+            notify({ message: error.message, type: "error" });
+          }
+        }
         if (id) {
           update({ ...values, id, [fileFieldName]: fileUrl });
         } else {
@@ -125,15 +126,14 @@ const EditForm = ({ id }: Props) => {
         }
       } else {
         if (id) {
-          console.log({ ...values, id });
 
           update({ ...values, id });
         } else {
           create({ ...values });
         }
       }
-    } catch (e: any) {
-      notify({ message: e.message, type: "error" });
+    } catch (error: any) {
+      notify({ message: error.message, type: "error" });
     }
   };
 
@@ -141,7 +141,15 @@ const EditForm = ({ id }: Props) => {
     { id: (id as number) ?? 0 },
     {
       enabled: !!id,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,        
       onSuccess: (data) => {
+        const file = fields.find((field: any) => field.type === "file");
+        if (data && file)
+          previousFileField.current = data[
+            file.name as keyof CreateSchemaType
+          ] as string;
         if (data) reset({ ...data });
       },
     }

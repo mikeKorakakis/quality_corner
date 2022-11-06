@@ -55,11 +55,7 @@ const FileInput = forwardRef<
               ref={ref}
               type="file"
               name={name}
-              onLoad={(e) => console.log("loaded")}
-              //   onLoadCapture={e => console.log("finished")}
-              //   onLoadedData={e => console.log("finished")}
               disabled={disabled}
-              style={{ textTransform: "none" }}
               className={clsx(
                 "file-input-bordered file-input w-full max-w-xs normal-case",
                 error && "input-error",

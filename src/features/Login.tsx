@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 
 import { toast } from "react-toastify";
-import TextInput from "../core/components/Form/TextInput";
-import Button from "../core/components/LoadingButton";
+import TextInput from "@/core/components/Form/TextInput";
+import Button from "@/core/components/LoadingButton";
 // import Button from "../../app/common/buttons/Button";
 // import Checkbox from "../../app/common/checkboxes/Checkbox";
 

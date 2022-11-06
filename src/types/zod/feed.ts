@@ -9,12 +9,10 @@ export const createSchema = z.object({
   categoryId: z.string().min(1, { message: "Category is required" }),
 });
 
-// type inferedCreateSchema = z.infer<typeof createSchema>;
-
-export const updateSchema = createSchema.merge(
-  z.object({ id: z.number().min(0) })
-);
+export type CreateSchemaType = z.infer<typeof createSchema>;
 
 export const getSchema = z.object({ id: z.number().min(0) });
 
-export const deleteSchema = z.object({ id: z.number().min(0) });
+export const updateSchema = createSchema.merge(getSchema);
+
+export const deleteSchema = getSchema;

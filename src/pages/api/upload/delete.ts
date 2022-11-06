@@ -1,11 +1,13 @@
 import path from "path";
 import fs from "fs";
-import { NextApiRequest } from 'next';
-import { NextApiResponse } from 'next';
+import { NextApiRequest } from "next";
+import { NextApiResponse } from "next";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-
-  if (req && req.method === "POST") { 
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  if (req && req.method === "DELETE") {
     const filename = req.query.filename as string;
     const file = path.join(process.cwd(), "public", "upload", filename);
     try {

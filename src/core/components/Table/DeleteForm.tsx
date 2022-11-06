@@ -1,7 +1,7 @@
 // import { ReactElement } from "react";
 
-import ModalContent from "../Layout/Modal/ModalContent";
-import { useModalStore } from "../../stores/modalStore";
+import ModalContent from "@/core/components/Layout/Modal/ModalContent";
+import { useModalStore } from "@/core/stores/modalStore";
 
 const titleDefault = "Delete Entry";
 const bodyDefault = "Are you sure you want to delete the entry?";

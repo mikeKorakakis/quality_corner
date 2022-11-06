@@ -5,7 +5,7 @@ import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCNext } from "@trpc/next";
 // import type { GetInferenceHelpers } from "@trpc/server";
 
-import type { AppRouter } from "../server/trpc/router/_app";
+import type { AppRouter } from "@/server/trpc/router/_app";
 import { delay } from "./delay";
 
 const getBaseUrl = () => {
@@ -17,10 +17,6 @@ const getBaseUrl = () => {
 export const trpc = createTRPCNext<AppRouter>({
   config() {
     return {
-      refetchOnMount: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      refetchOnMountOrArgChange: false,
       transformer: superjson,
       links: [
         loggerLink({

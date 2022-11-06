@@ -15,7 +15,7 @@ import {
 import { useRouter } from "next/router";
 import { ReactNode } from "react";
 import { signOut } from "next-auth/react";
-import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "../../../../config";
+import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "@/config";
 
 const title = APP_NAME;
 const secondaryMenuCation = "Secondary Menu";

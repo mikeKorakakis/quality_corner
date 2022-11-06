@@ -8,3 +8,5 @@ export const getAllSchema = z.object({
     z.object({ id: z.string(), value: z.unknown() }).optional()
   ),
 });
+
+export type GetAllSchemaType = z.infer<typeof getAllSchema>;

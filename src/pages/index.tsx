@@ -1,5 +1,5 @@
-import Page from "../core/components/Layout/Page";
-import Feed from "../features/Feed/FeedList";
+import Page from "@/core/components/Layout/Page";
+import Feed from "@/features/Feed/FeedList";
 
 const Home = () => {
   return (

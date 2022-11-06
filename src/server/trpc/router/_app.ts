@@ -1,5 +1,5 @@
 // src/server/trpc/router/_app.ts
-import { router } from "../trpc";
+import { router } from "@/server/trpc/trpc";
 import { exampleRouter } from "./example";
 import { authRouter } from "./auth";
 import { feedRouter } from "./feed";
