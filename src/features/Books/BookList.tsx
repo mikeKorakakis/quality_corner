@@ -21,10 +21,10 @@ const Feed = () => {
     
 }
   return (
-    <div className="not-prose mt-6 mb-10 overflow-x-auto w-[90rem] mx-auto">
+    <div className="not-prose mt-6 mb-10 overflow-x-auto w-[100rem] mx-auto">
      <div className="flex justify-between"> <h1 className="text-3xl ml-20 mb-5 font-light">ΒΙΒΛΙΟΓΡΑΦΙΕΣ</h1>
       {isAuthenticated && 
-        <Button onClick={syncdb}className="btn-primary btn-md w-72 mb-4 mr-20">ΣΥΓΧΡΟΝΙΣΜΟΣ ΑΡΧΕΙΩΝ</Button>
+        <Button onClick={syncdb} className="btn-primary btn-md w-72 mb-4 mr-20">ΣΥΓΧΡΟΝΙΣΜΟΣ ΑΡΧΕΙΩΝ</Button>
       }
       </div>
       <Table

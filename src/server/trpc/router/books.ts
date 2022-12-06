@@ -25,13 +25,25 @@ export const bookRouter = router({
     return { data: books, pageCount, bookCount };
   }),
 
- 
+  getAllCat1: publicProcedure.query(async ({ ctx }) => {
+    const books = await ctx.prisma.book.findMany({
+      select: { category1: true },
+      distinct: ["category1"],
+    });
+    return books;
+  }),
+
+  getAllCat2: publicProcedure.query(async ({ ctx }) => {
+    const books = await ctx.prisma.book.findMany({
+      select: { category2: true },
+      distinct: ["category2"],
+    });
+    return books;
+  }),
 
   update: publicProcedure
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
       return ctx.prisma.book.update({ where: { id: input.id }, data: input });
     }),
-
- 
 });

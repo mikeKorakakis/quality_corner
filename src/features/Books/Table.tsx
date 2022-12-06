@@ -47,9 +47,13 @@ interface Props {
   isAuthenticated: boolean;
 }
 
-export default function Home({ router, procedure, columnMap,isAuthenticated }: Props) {
+export default function Home({
+  router,
+  procedure,
+  columnMap,
+  isAuthenticated,
+}: Props) {
   // GET CURRENT USER FROM NEXT-AUTH
- 
 
   type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof procedure];
   type DataType = ProcedureOutput["data"][0];
@@ -108,6 +112,7 @@ export default function Home({ router, procedure, columnMap,isAuthenticated }: P
 
       return (
         <input
+          className="rounded-md border border-gray-300 p-1 fit-content w-96 "
           value={value as string}
           onChange={(e) => setValue(e.target.value)}
           onBlur={onBlur}
@@ -128,6 +133,7 @@ export default function Home({ router, procedure, columnMap,isAuthenticated }: P
     } else if (key === "description" && isAuthenticated) {
       return columnHelper.accessor(key, {
         id: key,
+        header: () => <span className="w-[4rem]">{title}</span>,
       });
     } else if (key === "index") {
       return columnHelper.display({
@@ -428,6 +434,9 @@ function Filter({
   column: Column<any, unknown>;
   table: ReactTable<any>;
 }) {
+  const { data: cat1 } = trpc.book.getAllCat1.useQuery();
+  const { data: cat2 } = trpc.book.getAllCat2.useQuery();
+
   const firstValue = table
     .getPreFilteredRowModel()
     .flatRows[0]?.getValue(column.id);
@@ -441,6 +450,51 @@ function Filter({
         : Array.from(column.getFacetedUniqueValues().keys()).sort(),
     [column, firstValue]
   );
+  if (column.id === "category1") {
+    return (
+      <>
+        {cat1 && (
+          <datalist id={column.id + "list"}>
+            {cat1.slice(0, 5000).map((value: any, i) => (
+              <option value={value.category1} key={i} />
+            ))}
+          </datalist>
+        )}
+        <DebouncedInput
+          type="text"
+          value={(columnFilterValue ?? "") as string}
+          onChange={(value) => column.setFilterValue(value)}
+          placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
+          className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
+          list={column.id + "list"}
+        />
+        <div className="h-1" />
+      </>
+    );
+  }
+
+  if (column.id === "category2") {
+    return (
+      <>
+        {cat2 && (
+          <datalist id={column.id + "list"}>
+            {cat2.slice(0, 5000).map((value: any, i) => (
+              <option value={value.category2} key={i} />
+            ))}
+          </datalist>
+        )}
+        <DebouncedInput
+          type="text"
+          value={(columnFilterValue ?? "") as string}
+          onChange={(value) => column.setFilterValue(value)}
+          placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
+          className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
+          list={column.id + "list"}
+        />
+        <div className="h-1" />
+      </>
+    );
+  }
 
   return typeof firstValue === "number" ? (
     <div>
@@ -489,7 +543,7 @@ function Filter({
         type="text"
         value={(columnFilterValue ?? "") as string}
         onChange={(value) => column.setFilterValue(value)}
-        placeholder={`Search... (${column.getFacetedUniqueValues().size})`}
+        placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
         className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
         list={column.id + "list"}
       />
@@ -503,10 +557,10 @@ const FileDownload = ({ filename }: { filename: string }) => {
     <div>
       {filename ? (
         <a
-          target='_blank'
+          target="_blank"
           rel="noopener noreferrer"
           // onClick={() => agent.BookEditions.getBookFile(id, filename)}
-          href={"/" + filename.replace('public/', '')}
+          href={"/" + filename.replace("public/", "")}
           className="btn-success btn-md btn-circle btn ml-[40%]"
 
           // className="inline-flex items-center rounded-full border border-transparent bg-primary-600 p-1 text-black shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
