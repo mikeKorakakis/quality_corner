@@ -1,8 +1,6 @@
 import { router, publicProcedure } from "../trpc";
-import { TRPCError } from "@trpc/server";
 import { getAllSchema } from "@/types/zod/general";
-import { deleteSchema, createSchema, updateSchema } from "@/types/zod/book";
-import { getSchema } from "@/types/zod/feed";
+import { updateSchema } from "@/types/zod/book";
 import { delay } from "@/utils/delay";
 import { generateFilterParams } from "@/utils/generateFilterParams";
 
@@ -27,10 +25,7 @@ export const bookRouter = router({
     return { data: books, pageCount };
   }),
 
-  get: publicProcedure.input(getSchema).query(async ({ input, ctx }) => {
-    delay(2000);
-    return ctx.prisma.post.findUnique({ where: { id: input.id } });
-  }),
+ 
 
   update: publicProcedure
     .input(updateSchema)

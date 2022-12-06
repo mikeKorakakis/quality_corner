@@ -16,40 +16,12 @@ datasource db {
 
 model Book {
     id        Int      @id @default(autoincrement())
-    title     String
-    description String
-    fileUrl String
+    title     String?
+    description String?
+    category String?
+    fileUrl String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-}
-
-model Example {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-}
-
-
-model PostCategory {
-    id       String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    name      String
-    posts     Post[]
-
-}
-
-model Post {
-    id       Int    @id @default(autoincrement())
-    title    String
-    body     String
-    date     DateTime?
-    image    String?
-    published Boolean? 
-    category PostCategory @relation(fields: [categoryId], references: [id])
-    categoryId String
-    author   User   @relation(fields: [authorId], references: [id])
-    authorId String
 }
 
 // Necessary for Next auth
@@ -88,7 +60,6 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
 }
 
 model VerificationToken {

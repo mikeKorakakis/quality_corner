@@ -18,6 +18,7 @@ import {
   useReactTable,
   getFacetedMinMaxValues,
   getFacetedUniqueValues,
+  ColumnDef,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
 import { AppRouterNames, AppRouterOutputTypes } from "@/server/trpc/router/_app";
@@ -54,6 +55,33 @@ export default function Home({
 
   const columnsArray = Array.from(columnMap);
 
+  const defaultColumn: Partial<ColumnDef<DataType>> = {
+    cell: ({ getValue, row, column: { id }, table }) => {
+        console.log("getValue",row, getValue());
+      const initialValue = getValue()
+      // We need to keep and update the state of the cell normally
+      const [value, setValue] = useState(initialValue)
+  
+      // When the input is blurred, we'll call our table meta's updateData function
+      const onBlur = () => {
+        table.options.meta?.updateData(row.index, id, value)
+      }
+  
+      // If the initialValue is changed external, sync it up with our state
+      useEffect(() => {
+        setValue(initialValue)
+      }, [initialValue])
+  
+      return (
+        <input
+          value={value as string}
+          onChange={e => setValue(e.target.value)}
+          onBlur={onBlur}
+        />
+      )
+    },
+  }
+
   const columnHelper = createColumnHelper<DataType>();
   const columns = columnsArray.map((innerArr) => {
     const key = innerArr[0] as any// DataTypeKeys | "display";
@@ -63,7 +91,11 @@ export default function Home({
         id: key,
         cell: () => title,
       });
-    } else {
+    } else if (key === "description") {
+        return columnHelper.accessor(key,{
+            id: key,
+        });
+    }else {
       return columnHelper.accessor(key, {
         id: key.toString(),
         header: () => <span>{title}</span>,
@@ -138,6 +170,7 @@ export default function Home({
 
   const table = useReactTable({
     data: data?.data ?? defaultData,
+    defaultColumn,
     pageCount: data?.pageCount ?? -1,
     state: {
       pagination,
