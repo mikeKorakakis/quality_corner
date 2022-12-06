@@ -38,19 +38,14 @@ import Skeleton from "@/core/components/Layout/Skeleton";
 interface Props {
   router: AppRouterNames;
   procedure: "getAll";
-  columnMap: Map<unknown, string>;
-  EditForm?: (id?: any) => JSX.Element;
-  DeleteForm?: (id?: any) => JSX.Element;
+  columnMap: Map<unknown, string>;  
 }
 
 export default function Home({
   router,
   procedure,
-  columnMap,
-  EditForm,
-  DeleteForm,
+  columnMap 
 }: Props) {
-    const { openModal } = useModalStore();
     
 
   type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof procedure];
@@ -100,53 +95,7 @@ export default function Home({
     }
   });
 
-  if (EditForm || DeleteForm) {
-    columns.push(
-      columnHelper.display({
-        id: "edit",
-        header: () => {
-          return (
-            EditForm && (
-              <button
-                className="btn btn-sm no-underline"
-                onClick={() => {
-                  openModal(<EditForm />);
-                }}
-              >
-                Create
-              </button>
-            )
-          );
-        },
-        cell: (info) => {
-          return (
-            <>
-              {EditForm && (
-                <button
-                  className="link block text-sm text-info no-underline"
-                  onClick={() => {
-                    openModal(<EditForm id={info.row.original.id} />);
-                  }}
-                >
-                  Edit
-                </button>
-              )}
-              {DeleteForm && (
-                <button
-                  className="link text-sm text-error no-underline"
-                  onClick={() => {
-                    openModal(<DeleteForm id={info.row.original.id} />);
-                  }}
-                >
-                  Delete
-                </button>
-              )}
-            </>
-          );
-        },
-      })
-    );
-  }
+
   // return columns;
   //   }, [columnMap, columnHelper]);
 
