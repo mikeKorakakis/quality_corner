@@ -22,7 +22,7 @@ export const bookRouter = router({
     });
 
     const pageCount = Math.ceil(bookCount / input.pageSize);
-    return { data: books, pageCount };
+    return { data: books, pageCount, bookCount };
   }),
 
  
@@ -30,7 +30,7 @@ export const bookRouter = router({
   update: publicProcedure
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
-      return ctx.prisma.post.update({ where: { id: input.id }, data: input });
+      return ctx.prisma.book.update({ where: { id: input.id }, data: input });
     }),
 
  

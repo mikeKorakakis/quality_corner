@@ -18,8 +18,9 @@ model Book {
     id        Int      @id @default(autoincrement())
     title     String?
     description String?
-    category String?
-    fileUrl String?
+    category1 String?
+    category2 String?
+    fileUrl String? @unique
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
@@ -53,8 +54,7 @@ model Session {
 
 model User {
     id            String    @id @default(cuid())
-    name          String?
-    email         String?   @unique
+    username      String    @unique
     password      String?
     emailVerified DateTime?
     image         String?

@@ -14,7 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import { ReactNode } from "react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "@/config";
 
 const title = APP_NAME;
@@ -24,53 +24,40 @@ interface Props {
   children: ReactNode;
 }
 const Layout2 = ({ children }: Props) => {
-  const isLoggedIn = true;
+  // get authentication status
+  const { status } = useSession();
+  const isLoggedIn = status === "authenticated";
   const router = useRouter();
 
   const currentPath = router.pathname;
 
   const navigation1 = [
     {
-      name: "Feed",
+      name: "Βιβλιοθήκη",
       href: "/",
       current: currentPath === "/",
       icon: BookOpenIcon,
       count: null,
     },
-    {
-      name: "Title 2",
-      href: "/title2",
-      current: currentPath.includes("title2"),
-      icon: BookOpenIcon,
-      count: null,
-    },
+    // {
+    //   name: "Title 2",
+    //   href: "/title2",
+    //   current: currentPath.includes("title2"),
+    //   icon: BookOpenIcon,
+    //   count: null,
+    // },
 
     // { name: "Documents", href: "#", icon: InboxMarkIcon, current: false, count: null },
     // { name: "Reports", href: "#", icon: ChartBarIcon, current: false, count: null },
-  ];
-
-  const navigation2 = [
-    {
-      name: "Feed",
-      href: "/feed",
-      current: currentPath.includes("feed"),
-      icon: ClipboardDocumentIcon,
-      count: null,
-    },
-    {
-      name: "Title 2",
-      href: "/title2",
-      current: currentPath.includes("title2"),
-      icon: ClipboardDocumentIcon,
-      count: null,
-    },
   ];
 
   const onSignout = () => {
     signOut({ callbackUrl: POST_LOGOUT_REDIRECT_URL });
   };
 
-  const accountNavigation = [{ name: "Logout", onClick: onSignout }];
+  const accountNavigation = isLoggedIn
+    ? [{ name: "ΑΠΟΣΥΝΔΕΣΗ", onClick: onSignout }]
+    : [{ name: "ΣΥΝΔΕΣΗ", onClick: () => router.push("/login") }];
   //   const navigation = adminNavigation;
 
   return (
@@ -86,48 +73,23 @@ const Layout2 = ({ children }: Props) => {
             shadow-sm backdrop-blur transition-all duration-100"
           >
             <nav className="navbar w-full">
-              <div className="flex flex-1 md:gap-1 lg:gap-2">
-                <span
-                  className="tooltip tooltip-bottom before:text-xs before:content-[attr(data-tip)]"
-                  data-tip="Menu"
-                >
-                  <label
-                    htmlFor="drawer"
-                    className="btn-ghost btn drawer-button btn-square lg:hidden"
+              <div className="sticky top-0 z-20 hidden items-center gap-2 px-4 py-2 backdrop-blur lg:flex ">
+                <Link href="/">
+                  <a
+                    aria-current="page"
+                    aria-label="Homepage"
+                    className="flex-0 btn-ghost btn px-2"
                   >
-                    <svg
-                      width={20}
-                      height={20}
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      className="inline-block h-5 w-5 stroke-current md:h-6 md:w-6"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16M4 18h16"
-                      />
-                    </svg>
-                  </label>
-                </span>
-                <div className="flex items-center gap-2 lg:hidden">
-                  <Link href="/">
-                    <a
-                      aria-current="page"
-                      aria-label="Homepage"
-                      className="flex-0 btn-ghost btn px-2 "
-                    >
-                      <div className="font-title inline-flex text-lg text-primary transition-all duration-200 md:text-3xl">
-                        <span className="lowercase text-primary">{title0}</span>
-                        <span className="uppercase text-base-content">
-                          {title1}
-                        </span>
-                      </div>
-                    </a>
-                  </Link>
-                </div>
+                    <div className="font-title inline-flex text-lg text-primary transition-all duration-200 md:text-3xl">
+                      <span className="lowercase">{title0}</span>
+                      <span className="uppercase text-base-content">
+                        {title1}
+                      </span>
+                    </div>
+                  </a>
+                </Link>
+              </div>
+              <div className="flex flex-1 md:gap-1 lg:gap-2">
                 <div className="hidden w-full max-w-sm lg:flex"></div>
               </div>
               <div className="flex-0">
@@ -137,7 +99,7 @@ const Layout2 = ({ children }: Props) => {
 
                 {/* <Theme/>
                 <Language/> */}
-                {isLoggedIn && (
+                {(
                   <div title="Change Theme" className="dropdown-end dropdown ">
                     <div
                       tabIndex={0}
@@ -172,7 +134,7 @@ const Layout2 = ({ children }: Props) => {
           </div>
           <div className="p-6 pb-16">
             <div className="flex flex-col-reverse justify-between gap-6 xl:flex-row">
-              <div className="prose w-full max-w-8xl flex-grow">{children}</div>
+              <div className="max-w-8xl prose w-full flex-grow ">{children}</div>
             </div>
           </div>
         </div>
@@ -181,62 +143,6 @@ const Layout2 = ({ children }: Props) => {
           style={{ scrollBehavior: "smooth", scrollPaddingTop: "5rem" }}
         >
           <label htmlFor="drawer" className="drawer-overlay" />
-          <aside className="w-80 bg-base-200">
-            <div className="sticky top-0 z-20 hidden items-center gap-2 bg-base-200 bg-opacity-90 px-4 py-2 backdrop-blur lg:flex ">
-              <Link href="/">
-                <a
-                  aria-current="page"
-                  aria-label="Homepage"
-                  className="flex-0 btn-ghost btn px-2"
-                >
-                  <div className="font-title inline-flex text-lg text-primary transition-all duration-200 md:text-3xl">
-                    <span className="lowercase">{title0}</span>
-                    <span className="uppercase text-base-content">
-                      {title1}
-                    </span>
-                  </div>
-                </a>
-              </Link>
-            </div>
-            <div className="h-4" />
-            <ul className="menu menu-compact flex flex-col p-0 px-4">
-              {navigation1.map((item) => (
-                <li key={item.name}>
-                  <a
-                    href={item.href}
-                    className={clsx("flex gap-4", item.current && "active")}
-                  >
-                    <span className="flex-none">
-                      <item.icon
-                        className={"mr-4 h-6 w-6"}
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <span className="flex-1">{item.name}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <ul className="menu menu-compact flex flex-col p-0 px-4">
-              <li />
-              <li className="menu-title">
-                <span>{secondaryMenuCation}</span>
-              </li>
-              {navigation2.map((item) => (
-                <li key={item.name}>
-                  <Link href={item.href}>
-                    <a
-                      className={clsx("flex gap-4", item.current && "active")}
-                    >
-                      <span className="flex-1">{item.name}</span>
-                    </a>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <ul className="menu menu-compact flex flex-col p-0 px-4"></ul>
-            <div className="pointer-events-none sticky bottom-0 flex h-20 bg-gradient-to-t from-base-200 to-transparent" />
-          </aside>
         </div>
       </div>
     </>

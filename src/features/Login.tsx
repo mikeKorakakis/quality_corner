@@ -48,7 +48,7 @@ const LoginForm = () => {
     // delete values["remember_me"];
     try {
       await signIn("credentials", {
-        email: values.username,
+        username: values.username,
         password: values.password,
         callbackUrl: POST_LOGIN_REDIRECT_URL,
         //   redirect: false
@@ -61,51 +61,17 @@ const LoginForm = () => {
   return (
     <div className="min-w-screen from-primary-500 flex min-h-screen items-center justify-center bg-gradient-to-l px-5 py-5">
       <div
-        className="w-full overflow-hidden rounded-3xl bg-gray-100 text-gray-500 shadow-xl"
-        style={{ maxWidth: "1000px" }}
+        className="w-[35rem] overflow-hidden rounded-3xl bg-gray-100 text-gray-500 shadow-xl"
       >
         <div className="w-full md:flex">
-          <div className="bg-primary-500  hidden w-1/2 justify-center py-5 px-10 md:flex">
-            <Image
-              src="/assets/logo.png"
-              alt=""
-              objectFit="contain"
-              width={300}
-              height={300}
-            />
-          </div>
-          <div className="w-full py-10 px-5 md:w-1/2 md:px-10">
+         
+          <div className="w-full py-10 px-5  md:px-10">
             <div className="mb-10 text-center">
               <h1 className="font-mono text-3xl font-bold text-gray-900">
                 {APP_NAME}
               </h1>
               <p>Εισάγετε τα στοιχεία σας για να συνδεθείτε</p>
-              <p>
-                Σύνδεση σαν{" "}
-                <span
-                  onClick={() =>
-                    reset({
-                      username: "admin",
-                      password: "Pa$$w0rd",
-                    })
-                  }
-                  className="text-primary-500 cursor-pointer underline"
-                >
-                  Διαχειριστής
-                </span>{" "}
-                ή{" "}
-                <span
-                  onClick={() =>
-                    reset({
-                      username: "user",
-                      password: "Pa$$w0rd",
-                    })
-                  }
-                  className="text-primary-500 cursor-pointer underline"
-                >
-                  Χρήστης
-                </span>
-              </p>
+             
             </div>
             <div className="h-2"></div>
 
@@ -152,7 +118,7 @@ const LoginForm = () => {
                   type="submit"
                   disabled={isSubmitting}
                 >
-                  SUBMIT
+                  ΣΥΝΔΕΣΗ
                 </Button>
               </div>
               <div className="h-2"></div>

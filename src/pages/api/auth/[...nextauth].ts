@@ -24,21 +24,23 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       type: "credentials",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "jsmith" },
+        username: { label: "Username", type: "username" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, _) {
-        const email = credentials?.email;
-        const password = credentials?.password;
-
-        if (!email || !password) throw new Error("email/password missing!");
-        const user = await prisma.user.findUnique({
+          const username = credentials?.username;
+          const password = credentials?.password;
+          
+          console.log(username, password);
+        if (!username || !password) throw new Error("username/password missing!");
+        const user = await prisma.user.findFirst({
           where: {
-            email: credentials.email,
+            username: credentials.username,
+            password: credentials.password,
           },
         });
         if (user) {
-          return { id: user.id, name: user.name, email: user.email };
+          return { id: user.id, username: user.username };
         }
         throw new Error("username/password do not match!");
 

@@ -1,12 +1,10 @@
 import Page from "@/core/components/Layout/Page";
-import Feed from "@/features/Feed/FeedList";
+import Books from "@/features/Books/BookList"
 
-const Home = () => {
+export default function FeedPage() {
   return (
-    <Page title="Feed">
-      <Feed />
+    <Page title="Βιβλιοθήκη" auth={false}>
+      <Books />
     </Page>
   );
-};
-
-export default Home;
+}

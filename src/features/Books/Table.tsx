@@ -2,6 +2,8 @@ import {
   ArrowUpCircleIcon,
   ArrowDownCircleIcon,
   ArrowRightCircleIcon,
+  XMarkIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
 import {
   Table as ReactTable,
@@ -21,11 +23,15 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import { AppRouterNames, AppRouterOutputTypes } from "@/server/trpc/router/_app";
+import {
+  AppRouterNames,
+  AppRouterOutputTypes,
+} from "@/server/trpc/router/_app";
 import { notify } from "@/utils/notify";
 import { trpc } from "@/utils/trpc";
 import { useModalStore } from "@/core/stores/modalStore";
 import Skeleton from "@/core/components/Layout/Skeleton";
+import { useSession } from "next-auth/react";
 
 // type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 
@@ -34,47 +40,114 @@ import Skeleton from "@/core/components/Layout/Skeleton";
 // };
 // type Transformed = UnionToIntersection<test>
 
-
-
 interface Props {
   router: AppRouterNames;
   procedure: "getAll";
-  columnMap: Map<unknown, string>;  
+  columnMap: Map<unknown, string>;
+  isAuthenticated: boolean;
 }
 
-export default function Home({
-  router,
-  procedure,
-  columnMap 
-}: Props) {
-    
+export default function Home({ router, procedure, columnMap,isAuthenticated }: Props) {
+  // GET CURRENT USER FROM NEXT-AUTH
+ 
 
   type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof procedure];
   type DataType = ProcedureOutput["data"][0];
-//   type DataTypeKeys = UnionToIntersection<DataType>;
+  //   type DataTypeKeys = UnionToIntersection<DataType>;
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  //   const rerender = useReducer(() => ({}), {})[1];
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const fetchDataOptions = {
+    pageIndex,
+    pageSize,
+    sorting,
+    columnFilters,
+  };
+  const { isLoading, error, data } = trpc[router][procedure].useQuery(
+    fetchDataOptions,
+    { keepPreviousData: true }
+  );
+  const utils = trpc.useContext();
+
+  const { mutate: update } = trpc["book"]["update"].useMutation({
+    onSuccess() {
+      // data && utils.book.getAll.setData({data: [], pageCount: data.pageCount});
+      utils["book"]["getAll"].invalidate();
+      //   utils[router][getProcedure].invalidate();
+    },
+    onError(error) {
+      notify({ message: error.message, type: "error" });
+    },
+  });
 
   const columnsArray = Array.from(columnMap);
 
+  const defaultColumn: Partial<ColumnDef<DataType>> = {
+    cell: ({ getValue, row, column: { id }, table }) => {
+      const originalRow = row.original;
+      const initialValue = getValue() as string;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [value, setValue] = useState(initialValue);
+      // When the input is blurred, we'll call our table meta's updateData function
+      const onBlur = () => {
+        table.options.meta?.updateData(row.index, id, value);
+        value !== null && update({ id: originalRow.id, description: value });
+      };
+
+      // If the initialValue is changed external, sync it up with our state
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
+
+      return (
+        <input
+          value={value as string}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={onBlur}
+        />
+      );
+    },
+  };
+
   const columnHelper = createColumnHelper<DataType>();
   const columns = columnsArray.map((innerArr) => {
-    const key = innerArr[0] as any// DataTypeKeys | "display";
+    const key = innerArr[0] as any; // DataTypeKeys | "display";
     const title = innerArr[1] as string;
     if (key === "display") {
       return columnHelper.display({
         id: key,
         cell: () => title,
       });
-    } else if (key === "description") {
-        return columnHelper.accessor(key,{
-            id: key,
-        });
-    }else {
+    } else if (key === "description" && isAuthenticated) {
+      return columnHelper.accessor(key, {
+        id: key,
+      });
+    } else if (key === "index") {
+      return columnHelper.display({
+        id: key,
+        header: () => <span className="w-[4rem]">{title}</span>,
+        cell: (info) =>
+          info?.table?.getSortedRowModel()?.flatRows?.indexOf(info?.row) +
+          1 +
+          pagination?.pageIndex * pagination?.pageSize,
+      });
+    } else {
       return columnHelper.accessor(key, {
         id: key.toString(),
         header: () => <span>{title}</span>,
         cell: (info) => {
           const value = info.getValue();
-          if (typeof value === "boolean") {
+          if (key === "fileUrl" && !isAuthenticated) {
+            const value = info.getValue();
+            return <FileDownload filename={value as string} />;
+          } else if (typeof value === "boolean") {
             return (
               <div className="flex items-center">
                 <input
@@ -100,30 +173,8 @@ export default function Home({
     }
   });
 
-
   // return columns;
   //   }, [columnMap, columnHelper]);
-
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  //   const rerender = useReducer(() => ({}), {})[1];
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-
-  const fetchDataOptions = {
-    pageIndex,
-    pageSize,
-    sorting,
-    columnFilters,
-  };
-
-  const { isLoading, error, data } = trpc[router][procedure].useQuery(
-    fetchDataOptions,
-    { keepPreviousData: true }
-  );
 
   useEffect(() => {
     if (error) {
@@ -143,6 +194,7 @@ export default function Home({
 
   const table = useReactTable({
     data: data?.data ?? defaultData,
+    defaultColumn,
     pageCount: data?.pageCount ?? -1,
     state: {
       pagination,
@@ -256,6 +308,9 @@ export default function Home({
         <tr className="w-full py-2">
           <th></th>
           <th colSpan={20}>
+            <div className="mb-1 text-[1rem]">
+              # ΑΠΟΤΕΛΕΣΜΑΤΑ: {data?.bookCount}
+            </div>
             <div className="btn-group ml-2  ">
               <button
                 className="btn-outline btn border-base-300 bg-base-100"
@@ -272,7 +327,7 @@ export default function Home({
                 {"<"}
               </button>
               <button className="btn-outline btn border-base-300 bg-base-100">
-                {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getState().pagination.pageIndex + 1} ΑΠΟ{" "}
                 {table.getPageCount()}
               </button>
               <button
@@ -291,7 +346,7 @@ export default function Home({
               </button>
             </div>
             <span className="ml-4  items-center gap-1 ">
-              Go to page:
+              ΣΕΛΙΔΑ:
               <input
                 type="number"
                 defaultValue={table.getState().pagination.pageIndex + 1}
@@ -309,9 +364,9 @@ export default function Home({
                 table.setPageSize(Number(e.target.value));
               }}
             >
-              {[10, 20, 30, 40, 50].map((pageSize) => (
+              {[10, 20, 30, 40, 50, 75, 100].map((pageSize) => (
                 <option key={pageSize} value={pageSize}>
-                  Show {pageSize}
+                  ΜΕΓΕΘΟΣ ΣΕΛ. {pageSize}
                 </option>
               ))}
             </select>
@@ -442,3 +497,27 @@ function Filter({
     </>
   );
 }
+
+const FileDownload = ({ filename }: { filename: string }) => {
+  return (
+    <div>
+      {filename ? (
+        <a
+          target='_blank'
+          rel="noopener noreferrer"
+          // onClick={() => agent.BookEditions.getBookFile(id, filename)}
+          href={"/" + filename.replace('public/', '')}
+          className="btn-success btn-md btn-circle btn ml-[40%]"
+
+          // className="inline-flex items-center rounded-full border border-transparent bg-primary-600 p-1 text-black shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+        >
+          <ArrowDownTrayIcon className="h-6 w-6" aria-hidden="true" />
+        </a>
+      ) : (
+        <a className="btn-error btn-md btn-circle btn">
+          <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+        </a>
+      )}
+    </div>
+  );
+};
