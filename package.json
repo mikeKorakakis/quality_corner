@@ -7,7 +7,7 @@
     "dev": "next dev",
     "postinstall": "prisma generate",
     "lint": "next lint",
-    "start": "next start"
+    "start": "node server.js"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.3",
@@ -21,7 +21,9 @@
     "@trpc/next": "10.0.0-rc.1",
     "@trpc/react-query": "10.0.0-rc.1",
     "@trpc/server": "10.0.0-rc.1",
+    "@types/ldapjs": "^2.2.5",
     "clsx": "^1.2.1",
+    "ldapjs": "^2.3.3",
     "multer": "^1.4.5-lts.1",
     "next": "12.3.1",
     "next-auth": "^4.15.0",

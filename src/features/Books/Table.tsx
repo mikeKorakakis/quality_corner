@@ -82,7 +82,7 @@ export default function Home({
   const { mutate: update } = trpc["book"]["update"].useMutation({
     onSuccess() {
       // data && utils.book.getAll.setData({data: [], pageCount: data.pageCount});
-      utils["book"]["getAll"].invalidate();
+      utils[router][procedure].invalidate();
       //   utils[router][getProcedure].invalidate();
     },
     onError(error) {
@@ -100,6 +100,8 @@ export default function Home({
       const [value, setValue] = useState(initialValue);
       // When the input is blurred, we'll call our table meta's updateData function
       const onBlur = () => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         table.options.meta?.updateData(row.index, id, value);
         value !== null && update({ id: originalRow.id, description: value });
       };
@@ -112,8 +114,8 @@ export default function Home({
 
       return (
         <input
-          className="rounded-md border border-gray-300 p-1 fit-content w-96 "
-          value={value as string}
+          className="w-96 input input-bordered"
+          value={value ?? ''}
           onChange={(e) => setValue(e.target.value)}
           onBlur={onBlur}
         />

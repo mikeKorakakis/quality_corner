@@ -17,11 +17,11 @@ import { useRouter } from "next/router";
 
 const LoginForm = () => {
   const session = useSession();
-  const router  = useRouter();
+  const router = useRouter();
 
   useEffect(() => {
     if (session.status === "authenticated") {
-      notify({message: "You are already logged in", type: "info"});
+      notify({ message: "You are already logged in", type: "info" });
       router.push(POST_LOGIN_REDIRECT_URL);
     }
   }, [session]);
@@ -59,23 +59,19 @@ const LoginForm = () => {
     }
   };
   return (
-    <div className="min-w-screen from-primary-500 flex min-h-screen items-center justify-center bg-gradient-to-l px-5 py-5">
-      <div
-        className="w-[35rem] overflow-hidden rounded-3xl bg-gray-100 text-gray-500 shadow-xl"
-      >
-        <div className="w-full md:flex">
-         
-          <div className="w-full py-10 px-5  md:px-10">
+    <div className="min-w-screen flex min-h-screen items-center justify-center  px-5 py-5 bg-base-100">
+      <div className="w-[35rem] overflow-hidden rounded-3xl shadow-xl">
+        <div className="card w-full md:flex">
+          <div className="card-body w-full py-10  px-5 md:px-10">
             <div className="mb-10 text-center">
-              <h1 className="font-mono text-3xl font-bold text-gray-900">
+              <h1 className="text-neutral-600 font-mono text-3xl font-bold">
                 {APP_NAME}
               </h1>
               <p>Εισάγετε τα στοιχεία σας για να συνδεθείτε</p>
-             
             </div>
             <div className="h-2"></div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 ">
               <TextInput
                 label="Όνομα Χρήστη"
                 {...register("username", {
