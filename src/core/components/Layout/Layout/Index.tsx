@@ -10,12 +10,16 @@ import {
   BookOpenIcon,
   CogIcon,
   ClipboardDocumentIcon,
+  SunIcon,
+  MoonIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "@/config";
+import { Theme } from "./ThemeSelector";
+
 
 const title = APP_NAME;
 const secondaryMenuCation = "Secondary Menu";
@@ -23,6 +27,9 @@ const [title0, title1] = title.split(" ");
 interface Props {
   children: ReactNode;
 }
+
+
+  
 const Layout2 = ({ children }: Props) => {
   // get authentication status
   const { status } = useSession();
@@ -97,6 +104,7 @@ const Layout2 = ({ children }: Props) => {
                   <UserCircleIcon className=" h-8 w-8" />
                 </div>
 
+                <Theme/>
                 {/* <Theme/>
                 <Language/> */}
                 {(

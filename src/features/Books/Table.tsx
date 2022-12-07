@@ -568,7 +568,7 @@ const FileDownload = ({ filename }: { filename: string }) => {
           <ArrowDownTrayIcon className="h-6 w-6" aria-hidden="true" />
         </a>
       ) : (
-        <a className="btn-error btn-md btn-circle btn">
+        <a className="btn-error btn-md btn-circle btn  ml-[40%]">
           <XMarkIcon className="h-6 w-6" aria-hidden="true" />
         </a>
       )}
