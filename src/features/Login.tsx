@@ -46,20 +46,20 @@ const LoginForm = () => {
       localStorage.setItem("remember_me", "false");
     }
     // delete values["remember_me"];
-    try {
-      await signIn("credentials", {
-        username: values.username,
-        password: values.password,
-        callbackUrl: POST_LOGIN_REDIRECT_URL,
-        //   redirect: false
-      });
-      //   await userStore.login(values);
-    } catch (error: any) {
-      toast.error(error.message);
-    }
+    signIn("credentials", {
+      username: values.username,
+      password: values.password,
+      callbackUrl: POST_LOGIN_REDIRECT_URL,
+
+      //   redirect: false
+    }).catch((err) => {
+      toast.error("Το όνομα χρήστη ή ο κωδικός πρόσβασης είναι λάθος");
+    });
+
+    //   await userStore.login(values);
   };
   return (
-    <div className="min-w-screen flex min-h-screen items-center justify-center  px-5 py-5 bg-base-100">
+    <div className="min-w-screen flex min-h-screen items-center justify-center  bg-base-100 px-5 py-5">
       <div className="w-[35rem] overflow-hidden rounded-3xl shadow-xl">
         <div className="card w-full md:flex">
           <div className="card-body w-full py-10  px-5 md:px-10">

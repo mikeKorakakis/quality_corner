@@ -1,6 +1,7 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import  ldap from "ldapjs"
+import ldap from "ldapjs";
+import { Client } from "ldapts";
 // import DiscordProvider from "next-auth/providers/discord";
 
 // Prisma adapter for NextAuth, optional and can be removed
@@ -16,78 +17,94 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ session, token, user }) {
       // Send properties to the client, like an access_token and user id from a provider.
-            
-      return {...session,user:{...session.user, id: token.sub || '1'}}
-    }
+
+      return { ...session, user: { ...session.user, id: token.sub || "1" } };
+    },
   },
   adapter: PrismaAdapter(prisma),
   providers: [
-    // CredentialsProvider({
-    //   type: "credentials",
-    //   credentials: {
-    //     username: { label: "Username", type: "username" },
-    //     password: { label: "Password", type: "password" },
-    //   },
-    //   async authorize(credentials, _) {
-    //       const username = credentials?.username;
-    //       const password = credentials?.password;
-          
-    //     if (!username || !password) throw new Error("username/password missing!");
-    //     const user = await prisma.user.findFirst({
-    //       where: {
-    //         username: credentials.username,
-    //         password: credentials.password,
-    //       },
-    //     });
-    //     if (user) {
-    //       return { id: user.id, username: user.username };
-    //     }
-    //     throw new Error("username/password do not match!");
-
-     
-    //   },
-    // }),
+    
     CredentialsProvider({
-        name: "LDAP",
-        credentials: {
-          username: { label: "DN", type: "text", placeholder: "" },
-          password: { label: "Password", type: "password" },
-        },
-        async authorize(credentials, req) {
-          // You might want to pull this call out so we're not making a new LDAP client on every login attemp
-          
+      name: "LDAP",
+      credentials: {
+        username: { label: "DN", type: "text", placeholder: "" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials, req) {
+        // You might want to pull this call out so we're not making a new LDAP client on every login attemp
+        const username = credentials?.username;
+        const password = credentials?.password;
+        if (username?.includes("@")) {
+          const request = await fetch(`${process.env.NEXTAUTH_URL}/api/read_folders`);
+          const folders = await request.json();
+          const availableGroups:string[] = folders.reduce(( init: string[], folder: string,) => {
+            return [...init, folder.toLowerCase() + "_view", folder.toLowerCase() + "_admin"];
+            },[]);
+
+          if (!username || !password)
+            throw new Error("username/password missing!");
+          const client = new Client({
+            url: `ldap://${username.split("@")[1]}`,
+          });
+
+         
+          try {
+            await client.bind(credentials.username, credentials.password);
+          } catch (e) {
+            return Promise.reject();
+          }
+          // find the user groups in LDAP
+          const res = await client.search("DC=day,DC=haf,DC=gr", {
+            filter: "(sAMAccountName=user)",
+            scope: "sub",
+            attributes: ["dn", "sn", "cn", "mail", "memberOf"],
+          });
+          const user = res.searchEntries[0];
+          const groups =
+            user &&
+            (user.memberOf as string[])?.map((group) => {
+              const groupname = group && group.split(",")[0]?.split("=")[1];
+              return groupname || "";
+            });
+          const intesect = groups && groups?.filter((group) =>
+            availableGroups.includes(group)
+            );
+
+            if(intesect?.length === 0) {
+                return Promise.reject();
+            }
+
+
+          await client.unbind();
+          return {
+            id: credentials.username,
+            name: credentials.username,
+            // groups: intesect,
+          };
+        } else {
           const username = credentials?.username;
           const password = credentials?.password;
-          
-        if (!username || !password) throw new Error("username/password missing!");
-          const client = ldap.createClient({
-            url: process.env.LDAP_URI || 'ldap://dc.day.haf.gr',
-          })
 
-
-  
-          // Essentially promisify the LDAPJS client.bind function
+          if (!username || !password)
+            throw new Error("username/password missing!");
+          const user = await prisma.user.findFirst({
+            where: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+          });
           return new Promise((resolve, reject) => {
-            client.bind(credentials.username, credentials.password, (error) => {
-              if (error) {
-                console.error("Failed")
-                reject()
-              } else {
-                console.log("Logged in")
-                // resolve({
-                //   username: credentials.username,
-                //   password: credentials.password,
-                // })
-              }
-            })
-          })
-        },
-      }),
-    // DiscordProvider({
-    //   clientId: env.DISCORD_CLIENT_ID,
-    //   clientSecret: env.DISCORD_CLIENT_SECRET,
-    // }),
-    // ...add more providers here
+            if (user) {
+              return resolve({
+                id: user.id,
+                name: user.username,
+              });
+            }
+            reject();
+          });
+        }
+      },
+    }),
   ],
   pages: { signIn: "/auth/signin" },
 };
