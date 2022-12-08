@@ -14,12 +14,12 @@ export default function Button(
   return (
     <button
       className={clsx(
-        "btn-md btn w-full bg-primary text-primary-content font-bold rounded-md",
-        loading && "loading disabled:bg-primary disabled:text-primary-content",
+        "btn-md btn w-full font-bold rounded-md",
+        loading &&  "loading " ,
         className
       )}
       type="submit"
-      disabled={disabled}
+      disabled={disabled || loading}
       {...rest}
     >
       {children}

@@ -11,7 +11,7 @@ const columns = new Map<string, string>([
   ["fileUrl", "ΑΡΧΕΙΟ"],
 ]);
 
-const Feed = () => {
+const BookList = () => {
   const { status } = useSession();
   const isAuthenticated = status === "authenticated";
   const syncdb = async () => {
@@ -28,14 +28,13 @@ const Feed = () => {
       }
       </div>
       <Table
-        isAuthenticated={isAuthenticated}
-        router="book"
-        procedure="getAll"
+        isAuthenticated={isAuthenticated}      
         columnMap={columns}
+        folder={"test"}
         // EditForm={BookEditForm}
       />
     </div>
   );
 };
 
-export default Feed;
+export default BookList;

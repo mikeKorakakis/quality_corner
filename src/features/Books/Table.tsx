@@ -39,23 +39,25 @@ import { useSession } from "next-auth/react";
 //   [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never;
 // };
 // type Transformed = UnionToIntersection<test>
-
+const router = "book"
+const getAllProcedure = "getAllInFolder";
+const getAllCat1 = "getAllCat1InFolder";
+const getAllCat2 = "getAllCat2InFolder";
+const updateProcedure = "update";
 interface Props {
-  router: AppRouterNames;
-  procedure: "getAll";
+  folder: string;
   columnMap: Map<unknown, string>;
   isAuthenticated: boolean;
 }
 
 export default function Home({
-  router,
-  procedure,
+    folder,
   columnMap,
   isAuthenticated,
 }: Props) {
   // GET CURRENT USER FROM NEXT-AUTH
 
-  type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof procedure];
+  type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof getAllProcedure];
   type DataType = ProcedureOutput["data"][0];
   //   type DataTypeKeys = UnionToIntersection<DataType>;
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -72,17 +74,18 @@ export default function Home({
     pageSize,
     sorting,
     columnFilters,
+    folder
   };
-  const { isLoading, error, data } = trpc[router][procedure].useQuery(
+  const { isLoading, error, data } = trpc[router][getAllProcedure].useQuery(
     fetchDataOptions,
     { keepPreviousData: true }
   );
   const utils = trpc.useContext();
 
-  const { mutate: update } = trpc["book"]["update"].useMutation({
+  const { mutate: update } = trpc[router][updateProcedure].useMutation({
     onSuccess() {
       // data && utils.book.getAll.setData({data: [], pageCount: data.pageCount});
-      utils[router][procedure].invalidate();
+      utils[router][getAllProcedure].invalidate();
       //   utils[router][getProcedure].invalidate();
     },
     onError(error) {
@@ -268,7 +271,7 @@ export default function Home({
                       <div>
                         {header.column.getCanFilter() ? (
                           <div>
-                            <Filter column={header.column} table={table} />
+                            <Filter column={header.column} table={table} folder={folder} />
                           </div>
                         ) : null}
                       </div>
@@ -432,12 +435,14 @@ function DebouncedInput({
 function Filter({
   column,
   table,
+  folder
 }: {
   column: Column<any, unknown>;
   table: ReactTable<any>;
+  folder: string;
 }) {
-  const { data: cat1 } = trpc.book.getAllCat1.useQuery();
-  const { data: cat2 } = trpc.book.getAllCat2.useQuery();
+  const { data: cat1 } = trpc[router][getAllCat1].useQuery({folder});
+  const { data: cat2 } = trpc[router][getAllCat2].useQuery({folder});
 
   const firstValue = table
     .getPreFilteredRowModel()

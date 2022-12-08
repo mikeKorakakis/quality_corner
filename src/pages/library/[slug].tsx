@@ -1,11 +1,23 @@
 import Page from "@/core/components/Layout/Page";
-import Books from "@/features/Books/BookList"
+import Books from "@/features/Books/BookList2";
+import { useRouter } from "next/router";
 
-export default function FeedPage(slug) {
-    console.log(slug)
+export default function FeedPage() {
+  const router = useRouter();
+  let folder = ""
+  // get the slug from the url as string or empty string
+  const { slug = ""  } = router.query;
+    // if slug is an array, get the first element
+    if (Array.isArray(slug)) {
+        folder = slug[0] || "";
+    }
+    else {
+        folder = slug;
+    }
+
   return (
     <Page title="Βιβλιοθήκη" auth={false}>
-      <Books />
+      <Books folder={folder} />
     </Page>
   );
 }
