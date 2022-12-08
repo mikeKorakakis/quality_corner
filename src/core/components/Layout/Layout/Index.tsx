@@ -94,7 +94,7 @@ const Layout2 = ({ children }: Props) => {
       <div className="drawer-mobile drawer bg-base-100">
         <input id="drawer" type="checkbox" className="drawer-toggle" />
         <div
-          className="drawer-content"
+          className="drawer-content overflow-hidden"
           style={{ scrollBehavior: "smooth", scrollPaddingTop: "5rem" }}
         >
           <div
