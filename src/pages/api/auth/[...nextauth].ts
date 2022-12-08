@@ -1,6 +1,5 @@
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import ldap from "ldapjs";
 import { Client } from "ldapts";
 // import DiscordProvider from "next-auth/providers/discord";
 
@@ -15,15 +14,54 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async session({ session, token, user }) {
-      // Send properties to the client, like an access_token and user id from a provider.
+    async session({ session, token}){//, user }) {
+      const role: string = token.role as string;
+      const groups: string[] = token.groups as string[];
 
-      return { ...session, user: { ...session.user, id: token.sub || "1" } };
+      return {
+        ...session,
+        user: { ...session.user, groups, role, id: token.sub || "1" },
+      };
+    },
+    async jwt({ token, user, account, profile, isNewUser }) {
+      if (user) {
+        // User object only passed on initial JWT creation
+        console.log(user);
+        console.log(token);
+        console.log(account);
+        console.log(profile);
+        console.log(isNewUser);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const groups = user.groups;
+        token.groups = groups;
+        if (
+          (user.name?.includes("@day.haf.gr") &&
+            groups.includes("Domain Admins")) ||
+          user.name === "admin"
+        ) {
+          token.role = "admin";
+        } else if (user.name === "moderator") {
+          token.role = "moderator";
+        } else {
+          token.role = "user";
+        }
+      }
+      console.log(token.role);
+      return token;
     },
   },
   adapter: PrismaAdapter(prisma),
+  //   callbacks: {
+  //     async jwt(token, user, account, profile, isNewUser) {
+  //      if (user) { // User object only passed on initial JWT creation
+  //        const administrators = [ 'jsmith@example.com' ]
+  //        token.isAdmin = administrators.includes(user?.email)
+  //      }
+  //      return token
+  //    }
+  //  },
   providers: [
-    
     CredentialsProvider({
       name: "LDAP",
       credentials: {
@@ -35,11 +73,20 @@ export const authOptions: NextAuthOptions = {
         const username = credentials?.username;
         const password = credentials?.password;
         if (username?.includes("@")) {
-          const request = await fetch(`${process.env.NEXTAUTH_URL}/api/read_folders`);
+          const request = await fetch(
+            `${process.env.NEXTAUTH_URL}/api/read_folders`
+          );
           const folders = await request.json();
-          const availableGroups:string[] = folders.reduce(( init: string[], folder: string,) => {
-            return [...init, folder.toLowerCase() + "_view", folder.toLowerCase() + "_admin"];
-            },[]);
+          const availableGroups: string[] = folders.reduce(
+            (init: string[], folder: string) => {
+              return [
+                ...init,
+                folder.toLowerCase() + "_view",
+                folder.toLowerCase() + "_admin",
+              ];
+            },
+            []
+          );
 
           if (!username || !password)
             throw new Error("username/password missing!");
@@ -47,7 +94,6 @@ export const authOptions: NextAuthOptions = {
             url: `ldap://${username.split("@")[1]}`,
           });
 
-         
           try {
             await client.bind(credentials.username, credentials.password);
           } catch (e) {
@@ -55,7 +101,7 @@ export const authOptions: NextAuthOptions = {
           }
           // find the user groups in LDAP
           const res = await client.search("DC=day,DC=haf,DC=gr", {
-            filter: "(sAMAccountName=user)",
+            filter: `(sAMAccountName=${username.split("@")[0]})`,
             scope: "sub",
             attributes: ["dn", "sn", "cn", "mail", "memberOf"],
           });
@@ -66,19 +112,22 @@ export const authOptions: NextAuthOptions = {
               const groupname = group && group.split(",")[0]?.split("=")[1];
               return groupname || "";
             });
-          const intesect = groups && groups?.filter((group) =>
-            availableGroups.includes(group)
+          const intesect =
+            groups &&
+            groups?.filter(
+              (group) =>
+                availableGroups.includes(group) || group === "Domain Admins"
             );
 
-            if(intesect?.length === 0) {
-                return Promise.reject();
-            }
-
+          if (intesect?.length === 0) {
+            return Promise.reject();
+          }
 
           await client.unbind();
           return {
             id: credentials.username,
             name: credentials.username,
+            groups: intesect,
             // groups: intesect,
           };
         } else {

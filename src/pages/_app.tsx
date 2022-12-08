@@ -20,8 +20,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
   useEffect(() => {
     const theme = localStorage.getItem("theme");
-    console.log("theme", theme);
-    theme && document.body.setAttribute("data-theme", JSON.parse(theme));
+    typeof(theme) === 'string' && document.body.setAttribute("data-theme", JSON.parse(theme) );
   }, []);
 
   useEffect(() => {

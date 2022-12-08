@@ -3,10 +3,12 @@ import { router } from "@/server/trpc/trpc";
 import { authRouter } from "./auth";
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { bookRouter } from "./books";
+import { folderRouter } from "./folder";
 
 const routers = {
   auth: authRouter,
   book: bookRouter,
+  folder: folderRouter,
 };
 
 export const appRouter = router(routers);

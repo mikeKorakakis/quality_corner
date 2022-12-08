@@ -47,16 +47,16 @@ const updateProcedure = "update";
 interface Props {
   folder: string;
   columnMap: Map<unknown, string>;
-  isAuthenticated: boolean;
+  role: string;
 }
 
 export default function Home({
     folder,
   columnMap,
-  isAuthenticated,
+  role,
 }: Props) {
   // GET CURRENT USER FROM NEXT-AUTH
-
+console.log("role",role)
   type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof getAllProcedure];
   type DataType = ProcedureOutput["data"][0];
   //   type DataTypeKeys = UnionToIntersection<DataType>;
@@ -135,7 +135,7 @@ export default function Home({
         id: key,
         cell: () => title,
       });
-    } else if (key === "description" && isAuthenticated) {
+    } else if (key === "description" && (role == "admin" || role == "moderator")) {
       return columnHelper.accessor(key, {
         id: key,
         header: () => <span className="w-[4rem]">{title}</span>,
@@ -155,7 +155,7 @@ export default function Home({
         header: () => <span>{title}</span>,
         cell: (info) => {
           const value = info.getValue();
-          if (key === "fileUrl" && !isAuthenticated) {
+          if (key === "fileUrl" && !(role == "admin" || role == "moderator")) {
             const value = info.getValue();
             return <FileDownload filename={value as string} />;
           } else if (typeof value === "boolean") {

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 const themes = [
   "light",
@@ -33,14 +33,23 @@ const themes = [
   "winter",
 ];
 export const Theme = () => {
-  const [theme, setTheme] = useLocalStorage("theme", "light");
+  const [theme, setTheme] = useLocalStorage("theme", "light");  
+  const [t,setT] = useState('light')
+
+  useEffect(() => {
+    setT(theme)
+    }, [theme, setT]);
+
+  
   useEffect(() => {
     const body = document.body;
     body.setAttribute("data-theme", theme);
   }, [theme]);
+
   const handleSetTheme = (theme: string) => {
     setTheme(theme);
   };
+  console.log('theme',)
 
   return (
     <div title="Change Theme" className="dropdown-end dropdown ">
@@ -76,7 +85,7 @@ export const Theme = () => {
           {themes.map((th) => (
             <div
               key={th}
-              className={clsx("overflow-hidden rounded-lg", th === theme &&"outline outline-2 outline-offset-2 outline-base-content")}
+              className={clsx("overflow-hidden rounded-lg", th ===  t && "outline outline-4 outline-offset-2 outline-base-content")}
               data-set-theme={th}
               data-act-class="outline"
             >

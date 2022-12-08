@@ -31,7 +31,16 @@ const Layout2 = ({ children }: Props) => {
   // get authentication status
   const state = useFolderStore();
   const { status, data } = useSession();
-  console.log("userdata", data?.user);
+  const user = data?.user;
+  const role = user?.role;
+  const username = user?.name;
+  console.log("role", role)
+  const roleText =
+    role === "admin"
+      ? "Διαχειριστής"
+      : role === "moderator"
+      ? "Συντάκτης"
+      : "Χρήστης";
   const isLoggedIn = status === "authenticated";
   const router = useRouter();
   const slug = router.query.slug;
@@ -73,8 +82,11 @@ const Layout2 = ({ children }: Props) => {
   };
 
   const accountNavigation = isLoggedIn
-    ? [{ name: "ΑΠΟΣΥΝΔΕΣΗ", onClick: onSignout }]
-    : [{ name: "ΣΥΝΔΕΣΗ", onClick: () => router.push("/login") }];
+    ? [
+        { name: `${username}, ${roleText}`, onClick: () => null },
+        { name: "ΑΠΟΣΥΝΔΕΣΗ", onClick: onSignout },
+      ]
+    : [{ name: "ΣΥΝΔΕΣΗ", onClick: () => router.push("/auth/signin") }];
   //   const navigation = adminNavigation;
 
   return (
@@ -141,7 +153,7 @@ const Layout2 = ({ children }: Props) => {
                 <Theme />
                 {/* <Theme/>
               <Language/> */}
-                {isLoggedIn && (
+                {(
                   <div title="Change Theme" className="dropdown-end dropdown ">
                     <div
                       tabIndex={0}
@@ -151,20 +163,36 @@ const Layout2 = ({ children }: Props) => {
                     </div>
                     <div className="dropdown-content rounded-t-box rounded-b-box top-px mt-16 h-fit max-h-96 w-52 overflow-y-auto bg-base-200 text-base-content shadow-2xl">
                       <div className="grid grid-cols-1 gap-3 p-3" tabIndex={0}>
-                        {accountNavigation.map((item) => (
-                          <div
-                            key={item.name}
-                            className="overflow-hidden rounded-lg outline outline-2 outline-offset-2 outline-base-content"
-                          >
-                            <div
-                              onClick={() => item.onClick()}
-                              className={clsx(
-                                "bg-gray-100",
-                                "block cursor-pointer px-4 py-2 text-center text-sm text-gray-700"
-                              )}
-                            >
-                              {item.name}
-                            </div>
+                        {accountNavigation.map((item, i) => (
+                          <div key={item.name}>
+                            {i === 0 && isLoggedIn ? (
+                              <div
+                                className="overflow-hidden rounded-lg "
+                              >
+                                <div
+                                  className={clsx(
+                                    "bg-gray-100",
+                                    "block px-4 py-2 text-center text-sm text-gray-700"
+                                  )}
+                                >
+                                  {item.name}
+                                </div>
+                              </div>
+                            ) : (
+                              <div
+                                className="overflow-hidden rounded-lg outline outline-2 outline-offset-2 outline-base-content"
+                              >
+                                <div
+                                  onClick={() => item.onClick()}
+                                  className={clsx(
+                                    "bg-gray-100",
+                                    "block cursor-pointer px-4 py-2 text-center text-sm text-gray-700"
+                                  )}
+                                >
+                                  {item.name}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
