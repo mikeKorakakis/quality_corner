@@ -25,14 +25,14 @@ const createFoldersInDb = async (folderPath: string) => {
       }
     });
     //delete folders in db that are not in the folderPath
-    const dbFolders = await prisma.folder.findMany();
-    dbFolders.forEach(async (dbFolder) => {
-      if (!folders.includes(dbFolder.name)) {
-        await prisma.folder.delete({
-          where: { name: dbFolder.name },
-        });
-      }
-    });
+    // const dbFolders = await prisma.folder.findMany();
+    // dbFolders.forEach(async (dbFolder) => {
+    //   if (!folders.includes(dbFolder.name)) {
+    //     await prisma.folder.delete({
+    //       where: { name: dbFolder.name },
+    //     });
+    //   }
+    // });
   };
 
 export default async function handler(req: any, res: any) {

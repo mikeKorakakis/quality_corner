@@ -1,6 +1,12 @@
 import { router, publicProcedure } from "../trpc";
 import { getAllSchema } from "@/types/zod/general";
-import { createSchema, deleteSchema, getByNameSchema, getSchema, updateSchema } from "@/types/zod/folder";
+import {
+  createSchema,
+  deleteSchema,
+  getByNameSchema,
+  getSchema,
+  updateSchema,
+} from "@/types/zod/folder";
 import { generateFilterParams } from "@/utils/generateFilterParams";
 import { protectedProcedure } from "./../trpc";
 
@@ -25,13 +31,28 @@ export const folderRouter = router({
     return { data: folders, pageCount, folderCount };
   }),
 
-    getByName: publicProcedure
+  getAllNoPagination: publicProcedure.query(async ({ ctx }) => {
+    return ctx.prisma.folder.findMany();
+  }),
+
+  getByName: publicProcedure
     .input(getByNameSchema)
     .query(async ({ input, ctx }) => {
-        return ctx.prisma.folder.findUnique({ where: { name: input.name } });
-
+      return ctx.prisma.folder.findUnique({ where: { name: input.name } });
     }),
 
+  getBookGroups: publicProcedure.query(async ({ ctx }) => {
+    const bookGroups = await ctx.prisma.book.groupBy({
+      by: ["folderId"],
+      
+      _count: {
+        _all: true,
+      }, 
+      
+    });
+
+    return bookGroups;
+  }),
 
   update: protectedProcedure
     .input(updateSchema)

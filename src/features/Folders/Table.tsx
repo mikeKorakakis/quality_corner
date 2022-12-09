@@ -86,38 +86,20 @@ export default function Home({ columnMap, role }: Props) {
     cell: ({ getValue, row, column: { id }, table }) => {
       const originalRow = row.original;
       const initialValue = getValue() as boolean;
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const [value, setValue] = useState(initialValue);
-      // When the input is blurred, we'll call our table meta's updateData function
-      const onBlur = () => {
-        console.log('data',{ ...originalRow, private: value })
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        // table.options.meta?.updateData(row.index, id, value);
-        // value !== null && update({ ...originalRow, private: value });
-      };
 
       const handleChange = (val: boolean) => {
-        console.log(`handleChange`, { ...originalRow, private: val });
          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        table.options.meta?.updateData(row.index, id, value);
+        table.options.meta?.updateData(row.index, id, val);
         update({ ...originalRow, private: val })
       }
-
-      // If the initialValue is changed external, sync it up with our state
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      useEffect(() => {
-        setValue(initialValue);
-      }, [initialValue]);
 
       return (
         <input
           type="checkbox"
           className="checkbox ml-20"
-          checked={value ?? false}
-          onChange={(e) => {console.log(e.target.value)}}
-          onBlur={onBlur}
+          checked={initialValue ?? false}
+          onChange={(e) =>handleChange(e.target.checked)}
         />
       );
     },

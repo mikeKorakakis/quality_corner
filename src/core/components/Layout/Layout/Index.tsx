@@ -13,6 +13,7 @@ import {
   SunIcon,
   MoonIcon,
   UserCircleIcon,
+  ArrowsRightLeftIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import { ReactNode } from "react";
@@ -34,7 +35,7 @@ const Layout2 = ({ children }: Props) => {
   const user = data?.user;
   const role = user?.role;
   const username = user?.name;
-  console.log("role", role)
+  console.log("role", role);
   const roleText =
     role === "admin"
       ? "Διαχειριστής"
@@ -55,15 +56,22 @@ const Layout2 = ({ children }: Props) => {
     };
   });
 
-  if(role === "admin") {
+  if (role === "admin") {
     navigation1.push({
-        name: "Φάκελοι",
-        href: "/folders",
-        current: router.pathname === "/folders",
-        icon: FolderIcon,
-        count: null,
-        });
-    }
+      name: "Φάκελοι",
+      href: "/folders",
+      current: router.pathname === "/folders",
+      icon: FolderIcon,
+      count: null,
+    });
+    navigation1.push({
+      name: "Αλλαγές",
+      href: "/changes",
+      current: router.pathname === "/changes",
+      icon: ArrowsRightLeftIcon,
+      count: null,
+    });
+  }
 
   //   const navigation1 = [
   //     {
@@ -161,7 +169,7 @@ const Layout2 = ({ children }: Props) => {
                 <Theme />
                 {/* <Theme/>
               <Language/> */}
-                {(
+                {
                   <div title="Change Theme" className="dropdown-end dropdown ">
                     <div
                       tabIndex={0}
@@ -174,9 +182,7 @@ const Layout2 = ({ children }: Props) => {
                         {accountNavigation.map((item, i) => (
                           <div key={item.name}>
                             {i === 0 && isLoggedIn ? (
-                              <div
-                                className="overflow-hidden rounded-lg "
-                              >
+                              <div className="overflow-hidden rounded-lg ">
                                 <div
                                   className={clsx(
                                     "bg-gray-100",
@@ -187,9 +193,7 @@ const Layout2 = ({ children }: Props) => {
                                 </div>
                               </div>
                             ) : (
-                              <div
-                                className="overflow-hidden rounded-lg outline outline-2 outline-offset-2 outline-base-content"
-                              >
+                              <div className="overflow-hidden rounded-lg outline outline-2 outline-offset-2 outline-base-content">
                                 <div
                                   onClick={() => item.onClick()}
                                   className={clsx(
@@ -206,7 +210,7 @@ const Layout2 = ({ children }: Props) => {
                       </div>
                     </div>
                   </div>
-                )}
+                }
               </div>
             </nav>
           </div>

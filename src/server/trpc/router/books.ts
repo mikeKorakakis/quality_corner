@@ -1,11 +1,14 @@
-import { router, publicProcedure } from "../trpc";
+import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { getAllSchema } from "@/types/zod/general";
 import {
+  deleteByFolderIdSchema,
   getAllCatInFolderSchema,
   getAllInFolderSchema,
+  transferBooksToFolderSchema,
   updateSchema,
 } from "@/types/zod/book";
 import { generateFilterParams } from "@/utils/generateFilterParams";
+import { FOLDER_ROOT } from "@/config";
 
 export const bookRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
@@ -95,5 +98,61 @@ export const bookRouter = router({
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
       return ctx.prisma.book.update({ where: { id: input.id }, data: input });
+    }),
+
+  tranferToOtherFolder: protectedProcedure
+    .input(transferBooksToFolderSchema)
+    .mutation(async ({ input, ctx }) => {
+      const books = await ctx.prisma.book.findMany({
+        where: { folder: { id: input.fromId } },
+      });
+
+      const folder = await ctx.prisma.folder.findUnique({
+        where: { id: input.toId },
+        select: { name: true, id: true },
+      });
+
+      if (!folder) {
+        throw new Error("Folder not found");
+      }
+      const updatedBooks = books.map((book) => {
+        if (book && book?.fileUrl) {
+          const oldFolderName =
+            book &&
+            book?.fileUrl &&
+            book?.fileUrl.replace(FOLDER_ROOT + "/", "").split("/")[0];
+          if (oldFolderName)
+            return {
+              ...book,
+              fileUrl: book?.fileUrl.replace(
+                `/${oldFolderName}/`,
+                `/${folder.name}/`
+              ),
+              folderId: folder.id,
+            };
+          return {
+            ...book,
+            folderId: folder.id,
+          };
+        }
+      });
+      // filter out undefined values
+      const filteredBooks = updatedBooks.filter((book) => typeof(book) !== "undefined");
+
+      await ctx.prisma.book.updateMany({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //@ts-ignore
+        where: { id: { in: filteredBooks.map((book) => book.id) } },
+        data: updatedBooks,
+      });
+      return updatedBooks;
+    }),
+
+  deleteByFolderId: protectedProcedure
+    .input(deleteByFolderIdSchema)
+    .mutation(async ({ input, ctx }) => {
+      return ctx.prisma.book.deleteMany({
+        where: { folderId: input.id },
+      });
     }),
 });
