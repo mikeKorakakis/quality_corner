@@ -23,15 +23,10 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import {
-  AppRouterNames,
-  AppRouterOutputTypes,
-} from "@/server/trpc/router/_app";
+import { AppRouterOutputTypes } from "@/server/trpc/router/_app";
 import { notify } from "@/utils/notify";
 import { trpc } from "@/utils/trpc";
-import { useModalStore } from "@/core/stores/modalStore";
 import Skeleton from "@/core/components/Layout/Skeleton";
-import { useSession } from "next-auth/react";
 
 // type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 
@@ -39,24 +34,18 @@ import { useSession } from "next-auth/react";
 //   [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never;
 // };
 // type Transformed = UnionToIntersection<test>
-const router = "book"
-const getAllProcedure = "getAllInFolder";
-const getAllCat1 = "getAllCat1InFolder";
-const getAllCat2 = "getAllCat2InFolder";
+const router = "folder";
+const getAllProcedure = "getAll";
 const updateProcedure = "update";
 interface Props {
-  folder: string;
   columnMap: Map<unknown, string>;
   role: string;
 }
 
-export default function Home({
-    folder,
-  columnMap,
-  role,
-}: Props) {
+export default function Home({ columnMap, role }: Props) {
   // GET CURRENT USER FROM NEXT-AUTH
-  type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof getAllProcedure];
+  type ProcedureOutput =
+    AppRouterOutputTypes[typeof router][typeof getAllProcedure];
   type DataType = ProcedureOutput["data"][0];
   //   type DataTypeKeys = UnionToIntersection<DataType>;
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -73,7 +62,6 @@ export default function Home({
     pageSize,
     sorting,
     columnFilters,
-    folder
   };
   const { isLoading, error, data } = trpc[router][getAllProcedure].useQuery(
     fetchDataOptions,
@@ -97,16 +85,25 @@ export default function Home({
   const defaultColumn: Partial<ColumnDef<DataType>> = {
     cell: ({ getValue, row, column: { id }, table }) => {
       const originalRow = row.original;
-      const initialValue = getValue() as string;
+      const initialValue = getValue() as boolean;
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const [value, setValue] = useState(initialValue);
       // When the input is blurred, we'll call our table meta's updateData function
       const onBlur = () => {
+        console.log('data',{ ...originalRow, private: value })
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        table.options.meta?.updateData(row.index, id, value);
-        value !== null && update({ id: originalRow.id, description: value });
+        // table.options.meta?.updateData(row.index, id, value);
+        // value !== null && update({ ...originalRow, private: value });
       };
+
+      const handleChange = (val: boolean) => {
+        console.log(`handleChange`, { ...originalRow, private: val });
+         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        table.options.meta?.updateData(row.index, id, value);
+        update({ ...originalRow, private: val })
+      }
 
       // If the initialValue is changed external, sync it up with our state
       // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -116,9 +113,10 @@ export default function Home({
 
       return (
         <input
-          className="w-96 input input-bordered"
-          value={value ?? ''}
-          onChange={(e) => setValue(e.target.value)}
+          type="checkbox"
+          className="checkbox ml-20"
+          checked={value ?? false}
+          onChange={(e) => {console.log(e.target.value)}}
           onBlur={onBlur}
         />
       );
@@ -134,7 +132,7 @@ export default function Home({
         id: key,
         cell: () => title,
       });
-    } else if (key === "description" && (role == "admin" || role == "moderator")) {
+    } else if (key === "private") {
       return columnHelper.accessor(key, {
         id: key,
         header: () => <span className="w-[4rem]">{title}</span>,
@@ -270,7 +268,7 @@ export default function Home({
                       <div>
                         {header.column.getCanFilter() ? (
                           <div>
-                            <Filter column={header.column} table={table} folder={folder} />
+                            <Filter column={header.column} table={table} />
                           </div>
                         ) : null}
                       </div>
@@ -319,7 +317,7 @@ export default function Home({
           <th></th>
           <th colSpan={20}>
             <div className="mb-1 text-[1rem]">
-              # ΑΠΟΤΕΛΕΣΜΑΤΑ: {data?.bookCount}
+              # ΑΠΟΤΕΛΕΣΜΑΤΑ: {data?.folderCount ?? 0}
             </div>
             <div className="btn-group ml-2  ">
               <button
@@ -434,15 +432,10 @@ function DebouncedInput({
 function Filter({
   column,
   table,
-  folder
 }: {
   column: Column<any, unknown>;
   table: ReactTable<any>;
-  folder: string;
 }) {
-  const { data: cat1 } = trpc[router][getAllCat1].useQuery({folder});
-  const { data: cat2 } = trpc[router][getAllCat2].useQuery({folder});
-
   const firstValue = table
     .getPreFilteredRowModel()
     .flatRows[0]?.getValue(column.id);
@@ -456,51 +449,6 @@ function Filter({
         : Array.from(column.getFacetedUniqueValues().keys()).sort(),
     [column, firstValue]
   );
-  if (column.id === "category1") {
-    return (
-      <>
-        {cat1 && (
-          <datalist id={column.id + "list"}>
-            {cat1.slice(0, 5000).map((value: any, i) => (
-              <option value={value.category1} key={i} />
-            ))}
-          </datalist>
-        )}
-        <DebouncedInput
-          type="text"
-          value={(columnFilterValue ?? "") as string}
-          onChange={(value) => column.setFilterValue(value)}
-          placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
-          className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
-          list={column.id + "list"}
-        />
-        <div className="h-1" />
-      </>
-    );
-  }
-
-  if (column.id === "category2") {
-    return (
-      <>
-        {cat2 && (
-          <datalist id={column.id + "list"}>
-            {cat2.slice(0, 5000).map((value: any, i) => (
-              <option value={value.category2} key={i} />
-            ))}
-          </datalist>
-        )}
-        <DebouncedInput
-          type="text"
-          value={(columnFilterValue ?? "") as string}
-          onChange={(value) => column.setFilterValue(value)}
-          placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
-          className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
-          list={column.id + "list"}
-        />
-        <div className="h-1" />
-      </>
-    );
-  }
 
   return typeof firstValue === "number" ? (
     <div>

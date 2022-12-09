@@ -1,5 +1,5 @@
 import Page from "@/core/components/Layout/Page";
-import Books from "@/features/Books/BookList2";
+import Books from "@/features/Books/BookList";
 import { useRouter } from "next/router";
 
 export default function FeedPage() {

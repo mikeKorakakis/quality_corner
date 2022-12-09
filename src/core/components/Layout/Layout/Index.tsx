@@ -45,8 +45,6 @@ const Layout2 = ({ children }: Props) => {
   const router = useRouter();
   const slug = router.query.slug;
 
-  const currentPath = router.pathname;
-  console.log(currentPath);
   const navigation1 = state.folders.map((folder) => {
     return {
       name: folder,
@@ -56,6 +54,16 @@ const Layout2 = ({ children }: Props) => {
       count: null,
     };
   });
+
+  if(role === "admin") {
+    navigation1.push({
+        name: "Φάκελοι",
+        href: "/folders",
+        current: router.pathname === "/folders",
+        icon: FolderIcon,
+        count: null,
+        });
+    }
 
   //   const navigation1 = [
   //     {
