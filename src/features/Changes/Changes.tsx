@@ -51,6 +51,21 @@ const FolderChanges = () => {
         })}
       </div>
       <div className="h-10"></div> */}
+      <div className="mockup-code">
+        <pre data-prefix="~">
+          <code>
+            Σε περίπτωση που διαγραφής φακέλου από τον δίσκο, θα πρέπει να διαγράψουμε πρώτα τα βιβλία που υπάρχου στην βάση και μετά τον φάκελο.
+          </code>
+     
+        </pre>
+        <pre data-prefix="~">
+          <code>
+            Σε περίπτωση μετονομασίας φακέλου από τον δίσκο, θα πρέπει πρώτα να μεταφέρουμε τις εγγραφές στον καινούργιο φάκελο και μετά να διαγράψουμε τον παλιό.
+          </code>
+     
+        </pre>
+      </div>
+
       <div className="flex justify-between">
         <h1 className="ml-20 mb-5 text-3xl font-light">ΦΑΚΕΛΟΙ ΣΤΗ ΒΑΣΗ</h1>
       </div>
@@ -115,7 +130,7 @@ const getRandomColor = (id?: number) => {
     "bg-pink-500",
     "bg-teal-500",
     "bg-purple-500",
-    "bg-magenta-500",
+    "bg-fuchsia-500",
   ];
   return colors[id % colors.length];
 };
@@ -163,12 +178,13 @@ const Folder = ({
         title="Διαγραφή Δεδομένων"
         acceptAction={() => {
           mutate({ id });
-          if (selectedFolder === id) setSelectedFolder(null);
           notify({
             message: "Eπιτυχής Διαγραφή Δεδομένων",
             type: "success",
           });
           closeModal();
+          if (selectedFolder === id || selectedFolder === null)
+            setSelectedFolder(null);
         }}
         acceptButtonText="ΔΙΑΓΡΑΦΗ"
         rejectButtonText="ΑΚΥΡΟ"
@@ -214,7 +230,7 @@ const Folder = ({
         <div className="stat-actions m-auto space-y-2">
           {!folderHasTableData && (
             <button
-              className="btn-secondary btn-sm btn block w-full"
+              className="btn btn-secondary btn-sm block w-full"
               onClick={handleDelete}
             >
               ΔΙΑΓΡΑΦΗ
@@ -308,14 +324,7 @@ const TableData = ({
   };
 
   return (
-    <div
-      className={clsx(
-        "stats m-5 text-primary-content",
-        getRandomColor(id)
-      
-      )}
-     
-    >
+    <div className={clsx("stats m-5 text-primary-content", getRandomColor(id))}>
       <div className="stat">
         <div className="font-bold  text-primary-content">id: {id}</div>
         <div className="font-bold  text-primary-content">Βιβλία: {count}</div>
@@ -336,13 +345,16 @@ const TableData = ({
         </div>
         <div className="stat-actions m-auto space-y-2">
           <button
-            className="btn-secondary btn-sm btn block w-full"
+            className="btn btn-secondary btn-sm block w-full"
             onClick={handleDelete}
           >
             ΔΙΑΓΡΑΦΗ
           </button>
           {selectedFolder && !foldersChildren?.includes(selectedFolder) && (
-            <button className="btn-secondary btn-sm btn" onClick={handleTranfer}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={handleTranfer}
+            >
               ΜΕΤΑΦΟΡΑ ΣΕ ΦΑΚΕΛΟ ΜΕ ID:{selectedFolder}
             </button>
           )}

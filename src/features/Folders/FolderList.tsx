@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 const columns = new Map<string, string>([
   ["index", "A/A"],
   ["name", "ΟΝΟΜΑ"],
+  ["description", "ΠΕΡΙΓΡΑΦΗ"],
   ["private", "ΙΔΙΩΤΙΚΗ"],
 ]);
 

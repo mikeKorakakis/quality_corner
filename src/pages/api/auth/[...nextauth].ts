@@ -23,14 +23,8 @@ export const authOptions: NextAuthOptions = {
         user: { ...session.user, groups, role, id: token.sub || "1" },
       };
     },
-    async jwt({ token, user, account, profile, isNewUser }) {
+    async jwt({ token, user}) {//, account, profile, isNewUser }) {
       if (user) {
-        // User object only passed on initial JWT creation
-        console.log(user);
-        console.log(token);
-        console.log(account);
-        console.log(profile);
-        console.log(isNewUser);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const groups = user.groups;
@@ -47,7 +41,6 @@ export const authOptions: NextAuthOptions = {
           token.role = "user";
         }
       }
-      console.log(token.role);
       return token;
     },
   },

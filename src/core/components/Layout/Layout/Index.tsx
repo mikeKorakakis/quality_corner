@@ -14,6 +14,7 @@ import {
   MoonIcon,
   UserCircleIcon,
   ArrowsRightLeftIcon,
+  FolderOpenIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import { ReactNode } from "react";
@@ -21,6 +22,7 @@ import { signOut, useSession } from "next-auth/react";
 import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "@/config";
 import { Theme } from "./ThemeSelector";
 import { useFolderStore } from "@/core/stores/folderStore";
+import { trpc } from "@/utils/trpc";
 
 const title = APP_NAME;
 const [title0, title1] = title.split(" ");
@@ -28,14 +30,21 @@ interface Props {
   children: ReactNode;
 }
 
-const Layout2 = ({ children }: Props) => {
+const urlMap: Record<string, string> = {
+  library: "Βιβλιογραφίες",
+  folders: "Φάκελοι",
+  changes: "Aλλαγές",
+};
+
+const secondaryMenuCation = "Διαχειριστής";
+
+const Layout = ({ children }: Props) => {
   // get authentication status
   const state = useFolderStore();
   const { status, data } = useSession();
   const user = data?.user;
   const role = user?.role;
   const username = user?.name;
-  console.log("role", role);
   const roleText =
     role === "admin"
       ? "Διαχειριστής"
@@ -46,7 +55,18 @@ const Layout2 = ({ children }: Props) => {
   const router = useRouter();
   const slug = router.query.slug;
 
-  const navigation1 = state.folders.map((folder) => {
+  // get folders from trpc
+  const { data: folders, isLoading: loadingFolders } =
+    trpc.folder.getAllNoPagination.useQuery();
+    const getFolderDescription = (folder: string) => {
+        const folderData = folders?.find((f) => f.name === folder);
+    if(folderData?.description)
+    return folderData?.description;
+    else 
+    return folder
+    };
+
+  const navigation = state.folders.map((folder) => {
     return {
       name: folder,
       href: `/library/${folder}`,
@@ -56,42 +76,32 @@ const Layout2 = ({ children }: Props) => {
     };
   });
 
-  if (role === "admin") {
-    navigation1.push({
+  const adminNavigation = [
+    {
       name: "Φάκελοι",
       href: "/folders",
       current: router.pathname === "/folders",
       icon: FolderIcon,
       count: null,
-    });
-    navigation1.push({
+    },
+    {
       name: "Αλλαγές",
       href: "/changes",
       current: router.pathname === "/changes",
       icon: ArrowsRightLeftIcon,
       count: null,
-    });
-  }
+    },
+  ];
+  const getPageTitle = () => {
+    const path =
+      (router?.pathname &&
+        router?.pathname?.split("/") &&
+        router?.pathname?.split("/")[1] &&
+        router?.pathname?.split("/")[1]?.toLowerCase()) ||
+      "";
+    return urlMap[path];
+  };
 
-  //   const navigation1 = [
-  //     {
-  //       name: "Βιβλιοθήκη",
-  //       href: "/",
-  //       current: currentPath === "/",
-  //       icon: BookOpenIcon,
-  //       count: null,
-  //     },
-  // {
-  //   name: "Title 2",
-  //   href: "/title2",
-  //   current: currentPath.includes("title2"),
-  //   icon: BookOpenIcon,
-  //   count: null,
-  // },
-
-  // { name: "Documents", href: "#", icon: InboxMarkIcon, current: false, count: null },
-  // { name: "Reports", href: "#", icon: ChartBarIcon, current: false, count: null },
-  //   ];
 
   const onSignout = () => {
     signOut({ callbackUrl: POST_LOGOUT_REDIRECT_URL });
@@ -214,9 +224,30 @@ const Layout2 = ({ children }: Props) => {
               </div>
             </nav>
           </div>
+
           <div className="p-6 pb-16">
             <div className="flex flex-col-reverse justify-between gap-6 xl:flex-row">
-              <div className="max-w-8xl prose w-full flex-grow">{children}</div>
+              <div className="max-w-8xl prose w-full flex-grow">
+                <div className="breadcrumbs text-sm">
+                  <ul>
+                    <li>
+                      <Link href="/">
+                        <>
+                          <FolderIcon className="mr-1 h-4 w-4 font-bold" />
+                          Αρχική
+                        </>
+                      </Link>
+                    </li>
+                    {getPageTitle() && (
+                      <li>
+                        <FolderOpenIcon className="mr-1 h-4 w-4 font-bold" />
+                        {getPageTitle()}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                {children}
+              </div>
             </div>
           </div>
         </div>
@@ -244,23 +275,63 @@ const Layout2 = ({ children }: Props) => {
             </div>
             <div className="h-4" />
             <ul className="menu menu-compact flex flex-col p-0 px-4">
-              {navigation1.map((item) => (
+              {navigation.map((item) => (
                 <li key={item.name}>
-                  <Link href={item.href}>
-                    <div
-                      className={clsx("flex gap-4", item.current && "active")}
-                    >
+                  {loadingFolders ? (
+                    <div className="flex animate-pulse gap-4 bg-base-300 h-8 my-1"></div>
+                  ) : (
+                    <Link href={item.href}>
+                      <div
+                        className={clsx("flex gap-4", item.current && "active")}
+                      >
+                        <span className="flex-none">
+                          <item.icon
+                            className={"mr-4 h-6 w-6"}
+                            aria-hidden="true"
+                          />
+                        </span>
+                        <span className="flex-1">{getFolderDescription(item.name)}</span>
+                      </div>
+                    </Link>
+                  )}
+                </li>
+              ))}
+              {role === "admin" && (
+                <>
+                  <li />
+                  <li className="menu-title inline gap-4">
+                    <div className="flex gap-4">
                       <span className="flex-none">
-                        <item.icon
+                        <CogIcon
                           className={"mr-4 h-6 w-6"}
                           aria-hidden="true"
                         />
                       </span>
-                      <span className="flex-1">{item.name}</span>
+                      <span className="flex-1 pt-1">{secondaryMenuCation}</span>
                     </div>
-                  </Link>
-                </li>
-              ))}
+                  </li>
+                  {adminNavigation.map((item) => (
+                    <li key={item.name}>
+                      <Link href={item.href}>
+                        <div
+                          className={clsx(
+                            "flex gap-4",
+                            item.current && "active"
+                          )}
+                        >
+                          <span className="flex-none">
+                            <item.icon
+                              className={"mr-4 h-6 w-6"}
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span className="flex-1">{item.name}</span>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </>
+              )}
             </ul>
             <ul className="menu menu-compact flex flex-col p-0 px-4"></ul>
             <div className="pointer-events-none sticky bottom-0 flex h-20 bg-gradient-to-t from-base-200 to-transparent" />
@@ -271,4 +342,4 @@ const Layout2 = ({ children }: Props) => {
   );
 };
 
-export default Layout2;
+export default Layout;

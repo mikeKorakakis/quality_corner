@@ -49,7 +49,6 @@ export const Theme = () => {
   const handleSetTheme = (theme: string) => {
     setTheme(theme);
   };
-  console.log('theme',)
 
   return (
     <div title="Change Theme" className="dropdown-end dropdown ">

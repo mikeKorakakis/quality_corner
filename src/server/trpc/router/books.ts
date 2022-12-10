@@ -121,6 +121,7 @@ export const bookRouter = router({
             book &&
             book?.fileUrl &&
             book?.fileUrl.replace(FOLDER_ROOT + "/", "").split("/")[0];
+
           if (oldFolderName)
             return {
               ...book,
@@ -132,19 +133,31 @@ export const bookRouter = router({
             };
           return {
             ...book,
+            createdAt: new Date(),
+            updatedAt: new Date(),
             folderId: folder.id,
           };
         }
       });
       // filter out undefined values
-      const filteredBooks = updatedBooks.filter((book) => typeof(book) !== "undefined");
+      const filteredBooks = updatedBooks.filter(
+        (book) => typeof book !== "undefined"
+      );
+      //update with loop
+      for (const book of filteredBooks) {
+        book && await ctx.prisma.book.update({
+          where: { id: book.id },
+          data: book,
+        });
+      }
+      //update with prisma
 
-      await ctx.prisma.book.updateMany({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        //@ts-ignore
-        where: { id: { in: filteredBooks.map((book) => book.id) } },
-        data: updatedBooks,
-      });
+      //   await ctx.prisma.book.updateMany({
+      //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //     //@ts-ignore
+      //     where: { id: { in: filteredBooks.map((book) => book.id) } },
+      //     data: updatedBooks,
+      //   });
       return updatedBooks;
     }),
 

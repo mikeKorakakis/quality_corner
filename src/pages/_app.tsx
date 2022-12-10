@@ -27,7 +27,6 @@ const MyApp: AppType<{ session: Session | null }> = ({
     const fetchFolders = async () => {
       const res = await fetch("/api/read_folders");
       const data = await res.json();
-      console.log("data", data);
       state.setFolders(data);
     };
     fetchFolders();

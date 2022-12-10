@@ -36,6 +36,7 @@ import Skeleton from "@/core/components/Layout/Skeleton";
 // type Transformed = UnionToIntersection<test>
 const router = "folder";
 const getAllProcedure = "getAll";
+const getAllNoPaginationProcedure = "getAllNoPagination";
 const updateProcedure = "update";
 interface Props {
   columnMap: Map<unknown, string>;
@@ -64,16 +65,16 @@ export default function Home({ columnMap, role }: Props) {
     columnFilters,
   };
   const { isLoading, error, data } = trpc[router][getAllProcedure].useQuery(
-    fetchDataOptions,
-    { keepPreviousData: true }
+    fetchDataOptions
+    // { keepPreviousData: true }
   );
   const utils = trpc.useContext();
 
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
+   
     onSuccess() {
-      // data && utils.book.getAll.setData({data: [], pageCount: data.pageCount});
       utils[router][getAllProcedure].invalidate();
-      //   utils[router][getProcedure].invalidate();
+      utils[router][getAllNoPaginationProcedure].invalidate();
     },
     onError(error) {
       notify({ message: error.message, type: "error" });
@@ -84,24 +85,53 @@ export default function Home({ columnMap, role }: Props) {
 
   const defaultColumn: Partial<ColumnDef<DataType>> = {
     cell: ({ getValue, row, column: { id }, table }) => {
-      const originalRow = row.original;
-      const initialValue = getValue() as boolean;
+      if (id === "private") {
+        const originalRow = row.original;
+        const initialValue = getValue() as boolean;
 
-      const handleChange = (val: boolean) => {
-         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        table.options.meta?.updateData(row.index, id, val);
-        update({ ...originalRow, private: val })
+        const handleChange = (val: boolean) => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          // table.options.meta?.updateData(row.index, id, val);
+          update({ ...originalRow, private: val, description: "dt" });
+        };
+
+        return (
+          <input
+            type="checkbox"
+            className="checkbox ml-20"
+            checked={initialValue ?? false}
+            onChange={(e) => handleChange(e.target.checked)}
+          />
+        );
+      } else if (id === "description") {
+        const originalRow = row.original;
+        const initialValue = getValue() as string;
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const [value, setValue] = useState(initialValue);
+        // When the input is blurred, we'll call our table meta's updateData function
+        const onBlur = () => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          // table.options.meta?.updateData(row.index, id, value);
+          value && update({ ...originalRow, description: value });
+        };
+
+        // If the initialValue is changed external, sync it up with our state
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+          setValue(initialValue);
+        }, [initialValue]);
+
+        return (
+          <input
+            className="input-bordered input w-52"
+            value={value ?? ""}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={onBlur}
+          />
+        );
       }
-
-      return (
-        <input
-          type="checkbox"
-          className="checkbox ml-20"
-          checked={initialValue ?? false}
-          onChange={(e) =>handleChange(e.target.checked)}
-        />
-      );
     },
   };
 
@@ -114,7 +144,7 @@ export default function Home({ columnMap, role }: Props) {
         id: key,
         cell: () => title,
       });
-    } else if (key === "private") {
+    } else if (key === "private" || key === "description") {
       return columnHelper.accessor(key, {
         id: key,
         header: () => <span className="w-[4rem]">{title}</span>,
@@ -497,14 +527,14 @@ const FileDownload = ({ filename }: { filename: string }) => {
           rel="noopener noreferrer"
           // onClick={() => agent.BookEditions.getBookFile(id, filename)}
           href={"/" + filename.replace("public/", "")}
-          className="btn-success btn-md btn-circle btn ml-[40%]"
+          className="btn btn-success btn-md btn-circle ml-[40%]"
 
           // className="inline-flex items-center rounded-full border border-transparent bg-primary-600 p-1 text-black shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
           <ArrowDownTrayIcon className="h-6 w-6" aria-hidden="true" />
         </a>
       ) : (
-        <a className="btn-error btn-md btn-circle btn  ml-[40%]">
+        <a className="btn btn-error btn-md btn-circle  ml-[40%]">
           <XMarkIcon className="h-6 w-6" aria-hidden="true" />
         </a>
       )}

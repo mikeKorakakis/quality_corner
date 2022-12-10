@@ -14,7 +14,6 @@ export const notify = ({ message, type }: Props) => {
     toastArray[length - 1]?.[0] === message &&
     Number(new Date()) - Number(toastArray[length - 1]?.[1]) < 1000
   ) {
-    console.log("cannot toast");
   } else {
     toast(message, {
       // toastId: cId,

@@ -53,8 +53,6 @@ const BookList = ({ folder }: Props) => {
         setAllowed(folder);
       } else if (
         groups.some((group) => {
-          console.log(group.split("_")[0]?.toLowerCase() === folder);
-          console.log(group.split("_")[1]?.toLowerCase() === "admin");
           return (
             group.split("_")[0]?.toLowerCase() === folder &&
             group.split("_")[1]?.toLowerCase() === "admin"
@@ -64,7 +62,7 @@ const BookList = ({ folder }: Props) => {
         setMod(folder);
         setAllowed(folder);
       }
-      if (
+      else if (
         folderData?.private &&
         !groups.some((group) => group.split("_")[0]?.toLowerCase() === folder)
       ) {
