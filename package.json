@@ -11,6 +11,7 @@
     "prisma": "prisma studio"
   },
   "dependencies": {
+    "@faker-js/faker": "^7.6.0",
     "@headlessui/react": "^1.7.3",
     "@heroicons/react": "^2.0.12",
     "@hookform/resolvers": "^2.9.10",

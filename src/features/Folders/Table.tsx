@@ -45,8 +45,77 @@ interface Props {
   role: string;
 }
 
+const defaultColumn: Partial<ColumnDef<any>> = {
+    cell: ({ getValue, row, column: { id }, table }) => {
+      if (id === "private") {
+        // const originalRow = row.original;
+        const initialValue = getValue() as boolean;
+
+        const handleChange = (val: boolean) => {
+        //   const updatedRow = {
+        //     ...originalRow,
+        //     private: val,
+        //   };
+        //   setUpdatedData((updatedData) => [
+        //     ...updatedData.filter((x) => x.id !== originalRow.id),
+        //     updatedRow,
+        //   ]);
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          table.options.meta?.updateData(row.index, id, val);
+          // table.options.meta?.updateData(row.index, id, val);
+          //   update({ ...originalRow, private: val, descripFtion: "dt" });
+        };
+
+        return (
+          <input
+            type="checkbox"
+            className="checkbox ml-20"
+            checked={initialValue ?? false}
+            onChange={(e) => handleChange(e.target.checked)}
+          />
+        );
+      } else if (id === "description") {
+        // const originalRow = row.original;
+        const initialValue = getValue() as string;
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const [value, setValue] = useState(initialValue);
+        // When the input is blurred, we'll call our table meta's updateData function
+        const onBlur = () => {
+        //   const updatedRow = {
+        //     ...originalRow,
+        //     description: value,
+        //   };
+        //   setUpdatedData((updatedData) => [
+        //     ...updatedData.filter((x) => x.id !== originalRow.id),
+        //     updatedRow,
+        //   ]);
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          table.options.meta?.updateData(row.index, id, value);
+
+          //   value && update({ ...originalRow, description: value });
+        };
+
+        // If the initialValue is changed external, sync it up with our state
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+          setValue(initialValue);
+        }, [initialValue]);
+
+        return (
+          <input
+            className="input-bordered input w-52"
+            value={value ?? ""}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={onBlur}
+          />
+        );
+      }
+    },
+  };
+
 export default function Home({ columnMap, role }: Props) {
-  const [updatedData, setUpdatedData] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(false);
   // GET CURRENT USER FROM NEXT-AUTH
   type ProcedureOutput =
@@ -61,6 +130,8 @@ export default function Home({ columnMap, role }: Props) {
     pageIndex: 0,
     pageSize: 10,
   });
+
+  const [tableData, setTableData] = useState(() => data?.data);
 
   const fetchDataOptions = {
     pageIndex,
@@ -89,84 +160,30 @@ export default function Home({ columnMap, role }: Props) {
     },
   });
 
+  
   const handleSave = () => {
-    setLoading(false);
-    update(updatedData);
-    setUpdatedData([]);
-    setLoading(false);
+    setLoading(true);
+    try {
+      if (tableData) {
+        update(tableData);
+        //   update(updatedData);
+        //   setUpdatedData([]);
+        notify({
+          message: "Επιτυχής αποθήκευση των δεδομένων",
+          type: "success",
+        });
+      }
+    } catch (err) {
+      notify({
+        message: "Σφάλμα κατά την αποθήκευση των δεδομένων",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const columnsArray = Array.from(columnMap);
-
-  const defaultColumn: Partial<ColumnDef<DataType>> = {
-    cell: ({ getValue, row, column: { id }, table }) => {
-      if (id === "private") {
-        const originalRow = row.original;
-        const initialValue = getValue() as boolean;
-
-        const handleChange = (val: boolean) => {
-          const updatedRow = {
-            ...originalRow,
-            private: val,
-          };
-          setUpdatedData((updatedData) => [
-            ...updatedData.filter((x) => x.id !== originalRow.id),
-            updatedRow,
-          ]);
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          table.options.meta?.updateData(row.index, id, val);
-          // table.options.meta?.updateData(row.index, id, val);
-          //   update({ ...originalRow, private: val, descripFtion: "dt" });
-        };
-
-        return (
-          <input
-            type="checkbox"
-            className="checkbox ml-20"
-            checked={initialValue ?? false}
-            onChange={(e) => handleChange(e.target.checked)}
-          />
-        );
-      } else if (id === "description") {
-        const originalRow = row.original;
-        const initialValue = getValue() as string;
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const [value, setValue] = useState(initialValue);
-        // When the input is blurred, we'll call our table meta's updateData function
-        const onBlur = () => {
-          const updatedRow = {
-            ...originalRow,
-            description: value,
-          };
-          setUpdatedData((updatedData) => [
-            ...updatedData.filter((x) => x.id !== originalRow.id),
-            updatedRow,
-          ]);
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          table.options.meta?.updateData(row.index, id, value);
-
-          //   value && update({ ...originalRow, description: value });
-        };
-
-        // If the initialValue is changed external, sync it up with our state
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        useEffect(() => {
-          setValue(initialValue);
-        }, [initialValue]);
-
-        return (
-          <input
-            className="input-bordered input w-52"
-            value={value ?? ""}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={onBlur}
-          />
-        );
-      }
-    },
-  };
 
   const columnHelper = createColumnHelper<DataType>();
   const columns = columnsArray.map((innerArr) => {
@@ -185,16 +202,19 @@ export default function Home({ columnMap, role }: Props) {
     } else if (key === "index") {
       return columnHelper.display({
         id: key,
-        header: () =>  role === "administrator" || role === "moderator" ? 
-          <Button
-            className="btn-sm btn"
-            disabled={updatedData.length === 0}
-            onClick={handleSave}
-            loading={loading}
-          >
-            ΑΠΟΘΗΚΕΥΣΗ
-          </Button>
-         : <span className="w-[4rem]">{title}</span>,
+        header: () =>
+          role === "admin" || role === "moderator" ? (
+            <Button
+              className="btn btn-sm btn-primary"
+            //   disabled={updatedData.length === 0}
+              onClick={handleSave}
+              loading={loading}
+            >
+              ΑΠΟΘΗΚΕΥΣΗ
+            </Button>
+          ) : (
+            <span className="w-[4rem]">{title}</span>
+          ),
         cell: (info) =>
           info?.table?.getSortedRowModel()?.flatRows?.indexOf(info?.row) +
           1 +
@@ -259,7 +279,8 @@ export default function Home({ columnMap, role }: Props) {
 
     return [shouldSkip, skip] as const;
   }
-  const [tableData, setTableData] = useState(() => data?.data);
+
+
   useEffect(() => {
     setTableData(data?.data);
   }, [data?.data]);
@@ -296,6 +317,8 @@ export default function Home({ columnMap, role }: Props) {
       sorting: [{ id: "title", desc: true }],
     },
     meta: {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
       updateData: (rowIndex: number, columnId: number, value: string) => {
         // Skip age index reset until after next rerender
         skipAutoResetPageIndex();

@@ -52,8 +52,63 @@ interface Props {
   role: string;
 }
 
+// declare module '@tanstack/react-table' {
+//     interface TableMeta<TData extends RowData> {
+//       updateData: (rowIndex: number, columnId: string, value: unknown) => void
+//     }
+//   }
+const defaultColumn: Partial<ColumnDef<any>> = {
+  cell: ({ getValue, row, column: { id }, table }) => {
+    const originalRow = row.original;
+    const initialValue = getValue() as string;
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const [value, setValue] = useState(initialValue);
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    // When the input is blurred, we'll call our table meta's updateData function
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    //   useEffect(() => {
+    //     if (inputRef.current) {
+    //       inputRef.current.addEventListener('click', () => {
+    //         inputRef.current.focus();
+    //       });
+    //     }
+    //   }, []);
+    const onBlur = () => {
+      // const updatedRow = {
+      //   ...originalRow,
+      //   description: value,
+      // };
+      // setUpdatedData((updatedData) => [
+      //   ...updatedData.filter((x) => x.id !== originalRow.id),
+      //   updatedRow,
+      // ]);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      table.options.meta?.updateData(row.index, id, value);
+
+      //   value && update({ ...originalRow, description: value });
+    };
+
+    // If the initialValue is changed external, sync it up with our state
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useEffect(() => {
+      setValue(initialValue);
+    }, [initialValue]);
+
+    return (
+      <input
+        className="input-bordered input w-72"
+        value={value ?? ""}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={onBlur}
+      />
+    );
+  },
+};
+
 export default function Home({ folder, columnMap, role }: Props) {
-  const [updatedData, setUpdatedData] = useState<Book[]>([]);
+  //   const [updatedData, setUpdatedData] = useState<Book[]>([]);
   const [loading, setLoading] = useState(false);
 
   // GET CURRENT USER FROM NEXT-AUTH
@@ -86,6 +141,9 @@ export default function Home({ folder, columnMap, role }: Props) {
       refetchOnWindowFocus: false,
     }
   );
+
+  const [tableData, setTableData] = useState(() => data?.data);
+
   const utils = trpc.useContext();
 
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
@@ -102,12 +160,15 @@ export default function Home({ folder, columnMap, role }: Props) {
   const handleSave = () => {
     setLoading(true);
     try {
-      update(updatedData);
-      setUpdatedData([]);
-      notify({
-        message: "Επιτυχής αποθήκευση των δεδομένων",
-        type: "success",
-      });
+      if (tableData) {
+        update(tableData);
+        //   update(updatedData);
+        //   setUpdatedData([]);
+        notify({
+          message: "Επιτυχής αποθήκευση των δεδομένων",
+          type: "success",
+        });
+      }
     } catch (err) {
       notify({
         message: "Σφάλμα κατά την αποθήκευση των δεδομένων",
@@ -119,56 +180,6 @@ export default function Home({ folder, columnMap, role }: Props) {
   };
 
   const columnsArray = Array.from(columnMap);
-
-  const defaultColumn: Partial<ColumnDef<DataType>> = {
-    cell: ({ getValue, row, column: { id }, table }) => {
-      const originalRow = row.original;
-      const initialValue = getValue() as string;
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const [value, setValue] = useState(initialValue);
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      // When the input is blurred, we'll call our table meta's updateData function
-
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      //   useEffect(() => {
-      //     if (inputRef.current) {
-      //       inputRef.current.addEventListener('click', () => {
-      //         inputRef.current.focus();
-      //       });
-      //     }
-      //   }, []);
-      const onBlur = () => {
-        const updatedRow = {
-          ...originalRow,
-          description: value,
-        };
-        setUpdatedData((updatedData) => [
-          ...updatedData.filter((x) => x.id !== originalRow.id),
-          updatedRow,
-        ]);
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        table.options.meta?.updateData(row.index, id, value);
-
-        //   value && update({ ...originalRow, description: value });
-      };
-
-      // If the initialValue is changed external, sync it up with our state
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      useEffect(() => {
-        setValue(initialValue);
-      }, [initialValue]);
-
-      return (
-        <input
-          className="input-bordered input w-72"
-          value={value ?? ""}
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={onBlur}
-        />
-      );
-    },
-  };
 
   const columnHelper = createColumnHelper<DataType>();
   const columns = columnsArray.map((innerArr) => {
@@ -191,10 +202,10 @@ export default function Home({ folder, columnMap, role }: Props) {
       return columnHelper.display({
         id: key,
         header: () =>
-          role === "administrator" || role === "moderator" ? (
+          role === "admin" || role === "moderator" ? (
             <Button
-              className="w-48"
-              disabled={updatedData.length === 0}
+              className="btn-primary w-48"
+              //   disabled={updatedData.length === 0}
               onClick={handleSave}
               loading={loading}
             >
@@ -278,7 +289,6 @@ export default function Home({ folder, columnMap, role }: Props) {
     return [shouldSkip, skip] as const;
   }
 
-  const [tableData, setTableData] = useState(() => data?.data);
   useEffect(() => {
     setTableData(data?.data);
   }, [data?.data]);
@@ -315,7 +325,9 @@ export default function Home({ folder, columnMap, role }: Props) {
       sorting: [{ id: "title", desc: true }],
     },
     meta: {
-      updateData: (rowIndex: number, columnId: number, value: string) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      //@ts-ignore
+      updateData: (rowIndex: number, columnId: string, value: string) => {
         // Skip age index reset until after next rerender
         skipAutoResetPageIndex();
         setTableData(

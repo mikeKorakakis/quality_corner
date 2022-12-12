@@ -45,7 +45,6 @@ const BookList = ({ folder }: Props) => {
     setLoading(false);
   };
 
-  console.log("user",data?.user)
 
   useEffect(() => {
     const groups = data?.user?.groups || [];
@@ -93,7 +92,6 @@ const BookList = ({ folder }: Props) => {
     )
   )
     return <LoadingPage page={true} />;
-console.log('role',role)
   return (
     <div className="not-prose mx-auto mt-6 mb-10 ">
       <div className="flex justify-between">
