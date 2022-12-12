@@ -22,7 +22,7 @@ import {
   getFacetedUniqueValues,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AppRouterNames,
   AppRouterOutputTypes,
@@ -32,6 +32,8 @@ import { trpc } from "@/utils/trpc";
 import { useModalStore } from "@/core/stores/modalStore";
 import Skeleton from "@/core/components/Layout/Skeleton";
 import { useSession } from "next-auth/react";
+import { Book } from "@prisma/client";
+import Button from "@/core/components/LoadingButton";
 
 // type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 
@@ -39,24 +41,24 @@ import { useSession } from "next-auth/react";
 //   [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never;
 // };
 // type Transformed = UnionToIntersection<test>
-const router = "book"
+const router = "book";
 const getAllProcedure = "getAllInFolder";
 const getAllCat1 = "getAllCat1InFolder";
 const getAllCat2 = "getAllCat2InFolder";
-const updateProcedure = "update";
+const updateProcedure = "updateMany";
 interface Props {
   folder: string;
   columnMap: Map<unknown, string>;
   role: string;
 }
 
-export default function Home({
-    folder,
-  columnMap,
-  role,
-}: Props) {
+export default function Home({ folder, columnMap, role }: Props) {
+  const [updatedData, setUpdatedData] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(false);
+
   // GET CURRENT USER FROM NEXT-AUTH
-  type ProcedureOutput = AppRouterOutputTypes[typeof router][typeof getAllProcedure];
+  type ProcedureOutput =
+    AppRouterOutputTypes[typeof router][typeof getAllProcedure];
   type DataType = ProcedureOutput["data"][0];
   //   type DataTypeKeys = UnionToIntersection<DataType>;
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -73,11 +75,16 @@ export default function Home({
     pageSize,
     sorting,
     columnFilters,
-    folder
+    folder,
   };
   const { isLoading, error, data } = trpc[router][getAllProcedure].useQuery(
     fetchDataOptions,
-    { keepPreviousData: true }
+    {
+      keepPreviousData: true,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
+    }
   );
   const utils = trpc.useContext();
 
@@ -92,6 +99,25 @@ export default function Home({
     },
   });
 
+  const handleSave = () => {
+    setLoading(true);
+    try {
+      update(updatedData);
+      setUpdatedData([]);
+      notify({
+        message: "Επιτυχής αποθήκευση των δεδομένων",
+        type: "success",
+      });
+    } catch (err) {
+      notify({
+        message: "Σφάλμα κατά την αποθήκευση των δεδομένων",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columnsArray = Array.from(columnMap);
 
   const defaultColumn: Partial<ColumnDef<DataType>> = {
@@ -100,12 +126,31 @@ export default function Home({
       const initialValue = getValue() as string;
       // eslint-disable-next-line react-hooks/rules-of-hooks
       const [value, setValue] = useState(initialValue);
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       // When the input is blurred, we'll call our table meta's updateData function
+
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      //   useEffect(() => {
+      //     if (inputRef.current) {
+      //       inputRef.current.addEventListener('click', () => {
+      //         inputRef.current.focus();
+      //       });
+      //     }
+      //   }, []);
       const onBlur = () => {
+        const updatedRow = {
+          ...originalRow,
+          description: value,
+        };
+        setUpdatedData((updatedData) => [
+          ...updatedData.filter((x) => x.id !== originalRow.id),
+          updatedRow,
+        ]);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         table.options.meta?.updateData(row.index, id, value);
-        value !== null && update({ id: originalRow.id, description: value });
+
+        //   value && update({ ...originalRow, description: value });
       };
 
       // If the initialValue is changed external, sync it up with our state
@@ -116,8 +161,8 @@ export default function Home({
 
       return (
         <input
-          className="w-96 input input-bordered"
-          value={value ?? ''}
+          className="input-bordered input w-72"
+          value={value ?? ""}
           onChange={(e) => setValue(e.target.value)}
           onBlur={onBlur}
         />
@@ -134,7 +179,10 @@ export default function Home({
         id: key,
         cell: () => title,
       });
-    } else if (key === "description" && (role == "admin" || role == "moderator")) {
+    } else if (
+      key === "description" &&
+      (role == "admin" || role == "moderator")
+    ) {
       return columnHelper.accessor(key, {
         id: key,
         header: () => <span className="w-[4rem]">{title}</span>,
@@ -142,7 +190,19 @@ export default function Home({
     } else if (key === "index") {
       return columnHelper.display({
         id: key,
-        header: () => <span className="w-[4rem]">{title}</span>,
+        header: () =>
+          role === "administrator" || role === "moderator" ? (
+            <Button
+              className="w-48"
+              disabled={updatedData.length === 0}
+              onClick={handleSave}
+              loading={loading}
+            >
+              ΑΠΟΘΗΚΕΥΣΗ
+            </Button>
+          ) : (
+            <span className="w-[4rem]">{title}</span>
+          ),
         cell: (info) =>
           info?.table?.getSortedRowModel()?.flatRows?.indexOf(info?.row) +
           1 +
@@ -202,8 +262,31 @@ export default function Home({
     [pageIndex, pageSize]
   );
 
+  function useSkipper() {
+    const shouldSkipRef = useRef(true);
+    const shouldSkip = shouldSkipRef.current;
+
+    // Wrap a function with this to skip a pagination reset temporarily
+    const skip = useCallback(() => {
+      shouldSkipRef.current = false;
+    }, []);
+
+    useEffect(() => {
+      shouldSkipRef.current = true;
+    });
+
+    return [shouldSkip, skip] as const;
+  }
+
+  const [tableData, setTableData] = useState(() => data?.data);
+  useEffect(() => {
+    setTableData(data?.data);
+  }, [data?.data]);
+
+  const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
+
   const table = useReactTable({
-    data: data?.data ?? defaultData,
+    data: tableData ?? defaultData,
     defaultColumn,
     pageCount: data?.pageCount ?? -1,
     state: {
@@ -230,6 +313,25 @@ export default function Home({
     // sortDescFirst: true,
     initialState: {
       sorting: [{ id: "title", desc: true }],
+    },
+    meta: {
+      updateData: (rowIndex: number, columnId: number, value: string) => {
+        // Skip age index reset until after next rerender
+        skipAutoResetPageIndex();
+        setTableData(
+          (old: any) =>
+            old &&
+            old.map((row: any, index: number) => {
+              if (index === rowIndex) {
+                return {
+                  ...old[rowIndex]!,
+                  [columnId]: value,
+                };
+              }
+              return row;
+            })
+        );
+      },
     },
   });
 
@@ -270,7 +372,11 @@ export default function Home({
                       <div>
                         {header.column.getCanFilter() ? (
                           <div>
-                            <Filter column={header.column} table={table} folder={folder} />
+                            <Filter
+                              column={header.column}
+                              table={table}
+                              folder={folder}
+                            />
                           </div>
                         ) : null}
                       </div>
@@ -434,14 +540,14 @@ function DebouncedInput({
 function Filter({
   column,
   table,
-  folder
+  folder,
 }: {
   column: Column<any, unknown>;
   table: ReactTable<any>;
   folder: string;
 }) {
-  const { data: cat1 } = trpc[router][getAllCat1].useQuery({folder});
-  const { data: cat2 } = trpc[router][getAllCat2].useQuery({folder});
+  const { data: cat1 } = trpc[router][getAllCat1].useQuery({ folder });
+  const { data: cat2 } = trpc[router][getAllCat2].useQuery({ folder });
 
   const firstValue = table
     .getPreFilteredRowModel()
@@ -567,14 +673,14 @@ const FileDownload = ({ filename }: { filename: string }) => {
           rel="noopener noreferrer"
           // onClick={() => agent.BookEditions.getBookFile(id, filename)}
           href={"/" + filename.replace("public/", "")}
-          className="btn-success btn-md btn-circle btn ml-[40%]"
+          className="btn btn-success btn-md btn-circle ml-[40%]"
 
           // className="inline-flex items-center rounded-full border border-transparent bg-primary-600 p-1 text-black shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
           <ArrowDownTrayIcon className="h-6 w-6" aria-hidden="true" />
         </a>
       ) : (
-        <a className="btn-error btn-md btn-circle btn  ml-[40%]">
+        <a className="btn btn-error btn-md btn-circle  ml-[40%]">
           <XMarkIcon className="h-6 w-6" aria-hidden="true" />
         </a>
       )}

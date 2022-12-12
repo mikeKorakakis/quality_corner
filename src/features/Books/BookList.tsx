@@ -45,6 +45,8 @@ const BookList = ({ folder }: Props) => {
     setLoading(false);
   };
 
+  console.log("user",data?.user)
+
   useEffect(() => {
     const groups = data?.user?.groups || [];
     if (!(status === "loading") || !(folderStatus === "loading")) {
@@ -57,12 +59,12 @@ const BookList = ({ folder }: Props) => {
             group.split("_")[0]?.toLowerCase() === folder &&
             group.split("_")[1]?.toLowerCase() === "admin"
           );
-        })
+        }) ||
+        data?.user?.role === "moderator"
       ) {
         setMod(folder);
         setAllowed(folder);
-      }
-      else if (
+      } else if (
         folderData?.private &&
         !groups.some((group) => group.split("_")[0]?.toLowerCase() === folder)
       ) {
@@ -79,14 +81,19 @@ const BookList = ({ folder }: Props) => {
         setAllowed(folder);
       }
     }
-  }, [folder, folderData, data, r, status, folderStatus]);
+  }, [folder, folderData, data, r, status, folderStatus, role]);
   if (
     status === "loading" ||
     folderStatus === "loading" ||
-    !(allowed === folder || mod === folder || role === "admin" || role === "moderator")
+    !(
+      allowed === folder ||
+      mod === folder ||
+      role === "admin" ||
+      role === "moderator"
+    )
   )
     return <LoadingPage page={true} />;
-
+console.log('role',role)
   return (
     <div className="not-prose mx-auto mt-6 mb-10 ">
       <div className="flex justify-between">
@@ -103,15 +110,17 @@ const BookList = ({ folder }: Props) => {
           </Button>
         )}
       </div>
-      <div className="overflow-x-auto w-full">
-      <Table
-        role={role === "admin" ? "admin" : mod === folder ? "moderator" : "user"}
-        columnMap={columns}
-        folder={folder}
-        // EditForm={BookEditForm}
-      />
+      <div className="w-full overflow-x-auto">
+        <Table
+          role={
+            role === "admin" ? "admin" :( mod === folder || role==="moderator") ? "moderator" : "user"
+          }
+          columnMap={columns}
+          folder={folder}
+          // EditForm={BookEditForm}
+        />
       </div>
-      </div>
+    </div>
   );
 };
 

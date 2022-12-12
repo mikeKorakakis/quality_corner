@@ -22,11 +22,13 @@ import {
   getFacetedUniqueValues,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppRouterOutputTypes } from "@/server/trpc/router/_app";
 import { notify } from "@/utils/notify";
 import { trpc } from "@/utils/trpc";
 import Skeleton from "@/core/components/Layout/Skeleton";
+import { Folder } from "@prisma/client";
+import Button from "@/core/components/LoadingButton";
 
 // type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 
@@ -37,13 +39,15 @@ import Skeleton from "@/core/components/Layout/Skeleton";
 const router = "folder";
 const getAllProcedure = "getAll";
 const getAllNoPaginationProcedure = "getAllNoPagination";
-const updateProcedure = "update";
+const updateProcedure = "updateMany";
 interface Props {
   columnMap: Map<unknown, string>;
   role: string;
 }
 
 export default function Home({ columnMap, role }: Props) {
+  const [updatedData, setUpdatedData] = useState<Folder[]>([]);
+  const [loading, setLoading] = useState(false);
   // GET CURRENT USER FROM NEXT-AUTH
   type ProcedureOutput =
     AppRouterOutputTypes[typeof router][typeof getAllProcedure];
@@ -65,13 +69,17 @@ export default function Home({ columnMap, role }: Props) {
     columnFilters,
   };
   const { isLoading, error, data } = trpc[router][getAllProcedure].useQuery(
-    fetchDataOptions
-    // { keepPreviousData: true }
+    fetchDataOptions,
+    {
+      keepPreviousData: true,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      refetchOnWindowFocus: false,
+    }
   );
   const utils = trpc.useContext();
 
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
-   
     onSuccess() {
       utils[router][getAllProcedure].invalidate();
       utils[router][getAllNoPaginationProcedure].invalidate();
@@ -80,6 +88,13 @@ export default function Home({ columnMap, role }: Props) {
       notify({ message: error.message, type: "error" });
     },
   });
+
+  const handleSave = () => {
+    setLoading(false);
+    update(updatedData);
+    setUpdatedData([]);
+    setLoading(false);
+  };
 
   const columnsArray = Array.from(columnMap);
 
@@ -90,10 +105,19 @@ export default function Home({ columnMap, role }: Props) {
         const initialValue = getValue() as boolean;
 
         const handleChange = (val: boolean) => {
+          const updatedRow = {
+            ...originalRow,
+            private: val,
+          };
+          setUpdatedData((updatedData) => [
+            ...updatedData.filter((x) => x.id !== originalRow.id),
+            updatedRow,
+          ]);
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
+          table.options.meta?.updateData(row.index, id, val);
           // table.options.meta?.updateData(row.index, id, val);
-          update({ ...originalRow, private: val, description: "dt" });
+          //   update({ ...originalRow, private: val, descripFtion: "dt" });
         };
 
         return (
@@ -111,10 +135,19 @@ export default function Home({ columnMap, role }: Props) {
         const [value, setValue] = useState(initialValue);
         // When the input is blurred, we'll call our table meta's updateData function
         const onBlur = () => {
+          const updatedRow = {
+            ...originalRow,
+            description: value,
+          };
+          setUpdatedData((updatedData) => [
+            ...updatedData.filter((x) => x.id !== originalRow.id),
+            updatedRow,
+          ]);
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          // table.options.meta?.updateData(row.index, id, value);
-          value && update({ ...originalRow, description: value });
+          table.options.meta?.updateData(row.index, id, value);
+
+          //   value && update({ ...originalRow, description: value });
         };
 
         // If the initialValue is changed external, sync it up with our state
@@ -152,7 +185,16 @@ export default function Home({ columnMap, role }: Props) {
     } else if (key === "index") {
       return columnHelper.display({
         id: key,
-        header: () => <span className="w-[4rem]">{title}</span>,
+        header: () =>  role === "administrator" || role === "moderator" ? 
+          <Button
+            className="btn-sm btn"
+            disabled={updatedData.length === 0}
+            onClick={handleSave}
+            loading={loading}
+          >
+            ΑΠΟΘΗΚΕΥΣΗ
+          </Button>
+         : <span className="w-[4rem]">{title}</span>,
         cell: (info) =>
           info?.table?.getSortedRowModel()?.flatRows?.indexOf(info?.row) +
           1 +
@@ -193,15 +235,6 @@ export default function Home({ columnMap, role }: Props) {
     }
   });
 
-  // return columns;
-  //   }, [columnMap, columnHelper]);
-
-  useEffect(() => {
-    if (error) {
-      notify({ message: error.message, type: "error" });
-    }
-  }, [error]);
-
   const defaultData = useMemo(() => [], []);
 
   const pagination = useMemo(
@@ -211,9 +244,30 @@ export default function Home({ columnMap, role }: Props) {
     }),
     [pageIndex, pageSize]
   );
+  function useSkipper() {
+    const shouldSkipRef = useRef(true);
+    const shouldSkip = shouldSkipRef.current;
+
+    // Wrap a function with this to skip a pagination reset temporarily
+    const skip = useCallback(() => {
+      shouldSkipRef.current = false;
+    }, []);
+
+    useEffect(() => {
+      shouldSkipRef.current = true;
+    });
+
+    return [shouldSkip, skip] as const;
+  }
+  const [tableData, setTableData] = useState(() => data?.data);
+  useEffect(() => {
+    setTableData(data?.data);
+  }, [data?.data]);
+
+  const [autoResetPageIndex, skipAutoResetPageIndex] = useSkipper();
 
   const table = useReactTable({
-    data: data?.data ?? defaultData,
+    data: tableData ?? defaultData,
     defaultColumn,
     pageCount: data?.pageCount ?? -1,
     state: {
@@ -240,6 +294,25 @@ export default function Home({ columnMap, role }: Props) {
     // sortDescFirst: true,
     initialState: {
       sorting: [{ id: "title", desc: true }],
+    },
+    meta: {
+      updateData: (rowIndex: number, columnId: number, value: string) => {
+        // Skip age index reset until after next rerender
+        skipAutoResetPageIndex();
+        setTableData(
+          (old: any) =>
+            old &&
+            old.map((row: any, index: number) => {
+              if (index === rowIndex) {
+                return {
+                  ...old[rowIndex]!,
+                  [columnId]: value,
+                };
+              }
+              return row;
+            })
+        );
+      },
     },
   });
 

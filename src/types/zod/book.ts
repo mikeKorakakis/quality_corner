@@ -2,7 +2,7 @@ import { z } from "zod";
 import { getAllSchema } from "./general";
 
 export const createSchema = z.object({
-  description: z.string(),
+  description: z.string().nullish(),
 });
 
 export type CreateSchemaType = z.infer<typeof createSchema>;
@@ -16,6 +16,8 @@ export const transferBooksToFolderSchema = z.object({
 });
 
 export const updateSchema = createSchema.merge(getSchema);
+
+export const updateManySchema = z.array(updateSchema);
 
 export const deleteSchema = getSchema;
 

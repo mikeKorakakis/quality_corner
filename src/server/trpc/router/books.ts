@@ -5,6 +5,7 @@ import {
   getAllCatInFolderSchema,
   getAllInFolderSchema,
   transferBooksToFolderSchema,
+  updateManySchema,
   updateSchema,
 } from "@/types/zod/book";
 import { generateFilterParams } from "@/utils/generateFilterParams";
@@ -100,6 +101,19 @@ export const bookRouter = router({
       return ctx.prisma.book.update({ where: { id: input.id }, data: input });
     }),
 
+  updateMany: protectedProcedure
+    .input(updateManySchema)
+    .mutation(async ({ input, ctx }) => {
+      await ctx.prisma.$transaction(
+        input.map((book) => {
+          return ctx.prisma.book.update({
+            where: { id: book.id },
+            data: book,
+          });
+        })
+      );
+    }),
+
   tranferToOtherFolder: protectedProcedure
     .input(transferBooksToFolderSchema)
     .mutation(async ({ input, ctx }) => {
@@ -145,10 +159,11 @@ export const bookRouter = router({
       );
       //update with loop
       for (const book of filteredBooks) {
-        book && await ctx.prisma.book.update({
-          where: { id: book.id },
-          data: book,
-        });
+        book &&
+          (await ctx.prisma.book.update({
+            where: { id: book.id },
+            data: book,
+          }));
       }
       //update with prisma
 

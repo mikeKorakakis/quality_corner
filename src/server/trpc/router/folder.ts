@@ -5,6 +5,7 @@ import {
   deleteSchema,
   getByNameSchema,
   getSchema,
+  updateManySchema,
   updateSchema,
 } from "@/types/zod/folder";
 import { generateFilterParams } from "@/utils/generateFilterParams";
@@ -44,11 +45,10 @@ export const folderRouter = router({
   getBookGroups: publicProcedure.query(async ({ ctx }) => {
     const bookGroups = await ctx.prisma.book.groupBy({
       by: ["folderId"],
-      
+
       _count: {
         _all: true,
-      }, 
-      
+      },
     });
 
     return bookGroups;
@@ -57,7 +57,23 @@ export const folderRouter = router({
   update: protectedProcedure
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
-      return ctx.prisma.folder.update({ where: { id: input.id }, data: input });
+      return ctx.prisma.folder.update({
+        where: { id: input.id },
+        data: input,
+      });
+    }),
+
+  updateMany: protectedProcedure
+    .input(updateManySchema)
+    .mutation(async ({ input, ctx }) => {
+      await ctx.prisma.$transaction(
+        input.map((folder) => {
+          return ctx.prisma.folder.update({
+            where: { id: folder.id },
+            data: folder,
+          });
+        })
+      );
     }),
 
   delete: protectedProcedure
