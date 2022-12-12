@@ -3,6 +3,7 @@ import Books from "@/features/Books/BookList";
 import { useRouter } from "next/router";
 
 export default function FeedPage() {
+    console.log("FeedPage")
   const router = useRouter();
   let folder = ""
   // get the slug from the url as string or empty string
