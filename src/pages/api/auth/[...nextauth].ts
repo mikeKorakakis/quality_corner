@@ -33,7 +33,7 @@ export const authOptions: NextAuthOptions = {
         token.groups = groups;
         if (
           (user.name?.includes("@day.haf.gr") &&
-            groups.includes("Domain Admins")) ||
+            groups.includes("domain admins")) ||
           user.name === "admin"
         ) {
           token.role = "admin";
@@ -127,7 +127,7 @@ export const authOptions: NextAuthOptions = {
             groups &&
             groups?.filter(
               (group) =>
-                availableGroups.includes(group) || group === "Domain Admins"
+                availableGroups.includes(group) || group === "domain admins"
             );
 
           if (intesect?.length === 0) {

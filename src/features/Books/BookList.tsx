@@ -45,7 +45,8 @@ const BookList = ({ folder }: Props) => {
     setLoading(false);
   };
 
-
+console.log(data?.user?.role)
+console.log(data?.user?.groups)
   useEffect(() => {
     const groups = data?.user?.groups || [];
     if (!(status === "loading") || !(folderStatus === "loading")) {
@@ -55,7 +56,7 @@ const BookList = ({ folder }: Props) => {
       } else if (
         groups.some((group) => {
           return (
-            group.split("_")[0]?.toLowerCase() === folder &&
+            group.split("_")[0]?.toLowerCase() === folder.toLowerCase() &&
             group.split("_")[1]?.toLowerCase() === "admin"
           );
         }) ||
