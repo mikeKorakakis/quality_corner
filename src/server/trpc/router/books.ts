@@ -10,6 +10,7 @@ import {
 } from "@/types/zod/book";
 import { generateFilterParams } from "@/utils/generateFilterParams";
 import { FOLDER_ROOT } from "@/config";
+import { Book } from "@prisma/client";
 
 export const bookRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
@@ -98,7 +99,10 @@ export const bookRouter = router({
   update: publicProcedure
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
-      return ctx.prisma.book.update({ where: { id: input.id }, data: input });
+      return ctx.prisma.book.update({
+        where: { id: input.id },
+        data: { description: input?.description },
+      });
     }),
 
   updateMany: protectedProcedure
@@ -108,7 +112,7 @@ export const bookRouter = router({
         input.map((book) => {
           return ctx.prisma.book.update({
             where: { id: book.id },
-            data: book,
+            data: { description: book?.description },
           });
         })
       );

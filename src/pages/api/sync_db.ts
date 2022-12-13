@@ -88,7 +88,7 @@ export default async function handler(req: any, res: any) {
         //   folderId: folderId ? folderId.id : 1,
         // });
 
-        if (folderId) {
+        if (folderId && !(titleWithoutExtension ==='Thumbs' || titleWithoutExtension === '_Thumbs' ||  titleWithoutExtension ==='thumbs' )) {
           
           await prisma.book.create({
             data: {

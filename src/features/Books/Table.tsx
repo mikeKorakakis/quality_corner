@@ -34,6 +34,7 @@ import Skeleton from "@/core/components/Layout/Skeleton";
 import { useSession } from "next-auth/react";
 import { Book } from "@prisma/client";
 import Button from "@/core/components/LoadingButton";
+import clsx from "clsx";
 
 // type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 
@@ -180,7 +181,7 @@ export default function Home({ folder, columnMap, role }: Props) {
   };
 
   const columnsArray = Array.from(columnMap);
-
+const buttonRef = useRef<HTMLButtonElement>(null)
   const columnHelper = createColumnHelper<DataType>();
   const columns = columnsArray.map((innerArr) => {
     const key = innerArr[0] as any; // DataTypeKeys | "display";
@@ -203,14 +204,15 @@ export default function Home({ folder, columnMap, role }: Props) {
         id: key,
         header: () =>
           role === "admin" || role === "moderator" ? (
-            <Button
-              className="btn-primary w-48"
+            <button
+              ref={buttonRef}
+              className={clsx("btn btn-primary w-48", loading && "loading")}
               //   disabled={updatedData.length === 0}
               onClick={handleSave}
-              loading={loading}
+              onMouseDown={()=>setTimeout(()=> {buttonRef?.current?.click()},400)}
             >
               ΑΠΟΘΗΚΕΥΣΗ
-            </Button>
+            </button>
           ) : (
             <span className="w-[4rem]">{title}</span>
           ),

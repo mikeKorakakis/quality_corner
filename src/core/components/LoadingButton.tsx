@@ -12,7 +12,7 @@ export default function Button(
   const { children, loading, disabled, className, ...rest } = props;
 
   return (
-    <button
+    <button    
       className={clsx(
         "btn-md btn w-full font-bold rounded-md",
         loading &&  "loading " ,

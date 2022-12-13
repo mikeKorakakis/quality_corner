@@ -59,7 +59,11 @@ export const folderRouter = router({
     .mutation(async ({ input, ctx }) => {
       return ctx.prisma.folder.update({
         where: { id: input.id },
-        data: input,
+        data: {
+          description: input.description,
+          name: input.name,
+          private: input.private,
+        },
       });
     }),
 
@@ -70,7 +74,11 @@ export const folderRouter = router({
         input.map((folder) => {
           return ctx.prisma.folder.update({
             where: { id: folder.id },
-            data: folder,
+            data: {
+                description: folder.description,
+                name: folder.name,
+                private: folder.private,
+              },
           });
         })
       );

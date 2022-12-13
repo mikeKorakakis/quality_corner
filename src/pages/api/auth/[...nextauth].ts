@@ -14,7 +14,8 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async session({ session, token}){//, user }) {
+    async session({ session, token }) {
+      //, user }) {
       const role: string = token.role as string;
       const groups: string[] = token.groups as string[];
 
@@ -23,7 +24,8 @@ export const authOptions: NextAuthOptions = {
         user: { ...session.user, groups, role, id: token.sub || "1" },
       };
     },
-    async jwt({ token, user}) {//, account, profile, isNewUser }) {
+    async jwt({ token, user }) {
+      //, account, profile, isNewUser }) {
       if (user) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -51,9 +53,7 @@ export const authOptions: NextAuthOptions = {
   //        const administrators = [ 'jsmith@example.com' ]
   //        token.isAdmin = administrators.includes(user?.email)
   //      }
-  //      return token
-  //    }
-  //  },
+  //      return token  //    }  //  },
   providers: [
     CredentialsProvider({
       name: "LDAP",
@@ -92,19 +92,37 @@ export const authOptions: NextAuthOptions = {
           } catch (e) {
             return Promise.reject();
           }
-          // find the user groups in LDAP
-          const res = await client.search("DC=day,DC=haf,DC=gr", {
+
+          let searchUri = "";
+          const splitUri = username.split("@")[1]?.split(".");
+          if (splitUri && splitUri.length > 0) {
+            for (const id of splitUri) {
+              searchUri = searchUri + `DC=${id},`;
+            }
+          }
+          searchUri = searchUri.substring(0, searchUri.length - 1);
+
+          const res = await client.search(searchUri, {
             filter: `(sAMAccountName=${username.split("@")[0]})`,
             scope: "sub",
             attributes: ["dn", "sn", "cn", "mail", "memberOf"],
           });
           const user = res.searchEntries[0];
-          const groups =
-            user &&
-            (user.memberOf as string[])?.map((group) => {
-              const groupname = group && group.split(",")[0]?.split("=")[1];
-              return groupname || "";
-            });
+          let groups: string[] = [];
+          if (user && Array.isArray(user.memberOf)) {
+            groups =
+              user &&
+              (user.memberOf as string[])?.map((group) => {
+                const groupname =
+                  group && group.split(",")[0]?.split("=")[1]?.toLowerCase();
+                return groupname || "";
+              });
+          } else if (typeof user?.memberOf === "string") {
+            let group =
+              user?.memberOf && user?.memberOf?.split(",")[0]?.split("=")[1];
+            group = group && group.toLowerCase();
+            groups = group ? [group] : [""];
+          }
           const intesect =
             groups &&
             groups?.filter(

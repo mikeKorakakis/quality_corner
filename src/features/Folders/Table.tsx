@@ -29,6 +29,7 @@ import { trpc } from "@/utils/trpc";
 import Skeleton from "@/core/components/Layout/Skeleton";
 import { Folder } from "@prisma/client";
 import Button from "@/core/components/LoadingButton";
+import clsx from "clsx";
 
 // type GetKeys<U> = U extends Record<infer K, any> ? K : never;
 
@@ -46,12 +47,12 @@ interface Props {
 }
 
 const defaultColumn: Partial<ColumnDef<any>> = {
-    cell: ({ getValue, row, column: { id }, table }) => {
-      if (id === "private") {
-        // const originalRow = row.original;
-        const initialValue = getValue() as boolean;
+  cell: ({ getValue, row, column: { id }, table }) => {
+    if (id === "private") {
+      // const originalRow = row.original;
+      const initialValue = getValue() as boolean;
 
-        const handleChange = (val: boolean) => {
+      const handleChange = (val: boolean) => {
         //   const updatedRow = {
         //     ...originalRow,
         //     private: val,
@@ -60,28 +61,28 @@ const defaultColumn: Partial<ColumnDef<any>> = {
         //     ...updatedData.filter((x) => x.id !== originalRow.id),
         //     updatedRow,
         //   ]);
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          table.options.meta?.updateData(row.index, id, val);
-          // table.options.meta?.updateData(row.index, id, val);
-          //   update({ ...originalRow, private: val, descripFtion: "dt" });
-        };
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        table.options.meta?.updateData(row.index, id, val);
+        // table.options.meta?.updateData(row.index, id, val);
+        //   update({ ...originalRow, private: val, descripFtion: "dt" });
+      };
 
-        return (
-          <input
-            type="checkbox"
-            className="checkbox ml-20"
-            checked={initialValue ?? false}
-            onChange={(e) => handleChange(e.target.checked)}
-          />
-        );
-      } else if (id === "description") {
-        // const originalRow = row.original;
-        const initialValue = getValue() as string;
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const [value, setValue] = useState(initialValue);
-        // When the input is blurred, we'll call our table meta's updateData function
-        const onBlur = () => {
+      return (
+        <input
+          type="checkbox"
+          className="checkbox ml-20"
+          checked={initialValue ?? false}
+          onChange={(e) => handleChange(e.target.checked)}
+        />
+      );
+    } else if (id === "description") {
+      // const originalRow = row.original;
+      const initialValue = getValue() as string;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [value, setValue] = useState(initialValue);
+      // When the input is blurred, we'll call our table meta's updateData function
+      const onBlur = () => {
         //   const updatedRow = {
         //     ...originalRow,
         //     description: value,
@@ -90,30 +91,30 @@ const defaultColumn: Partial<ColumnDef<any>> = {
         //     ...updatedData.filter((x) => x.id !== originalRow.id),
         //     updatedRow,
         //   ]);
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          table.options.meta?.updateData(row.index, id, value);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        table.options.meta?.updateData(row.index, id, value);
 
-          //   value && update({ ...originalRow, description: value });
-        };
+        //   value && update({ ...originalRow, description: value });
+      };
 
-        // If the initialValue is changed external, sync it up with our state
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        useEffect(() => {
-          setValue(initialValue);
-        }, [initialValue]);
+      // If the initialValue is changed external, sync it up with our state
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
 
-        return (
-          <input
-            className="input-bordered input w-52"
-            value={value ?? ""}
-            onChange={(e) => setValue(e.target.value)}
-            onBlur={onBlur}
-          />
-        );
-      }
-    },
-  };
+      return (
+        <input
+          className="input-bordered input w-52"
+          value={value ?? ""}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={onBlur}
+        />
+      );
+    }
+  },
+};
 
 export default function Home({ columnMap, role }: Props) {
   const [loading, setLoading] = useState(false);
@@ -160,7 +161,6 @@ export default function Home({ columnMap, role }: Props) {
     },
   });
 
-  
   const handleSave = () => {
     setLoading(true);
     try {
@@ -185,6 +185,7 @@ export default function Home({ columnMap, role }: Props) {
 
   const columnsArray = Array.from(columnMap);
 
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const columnHelper = createColumnHelper<DataType>();
   const columns = columnsArray.map((innerArr) => {
     const key = innerArr[0] as any; // DataTypeKeys | "display";
@@ -204,14 +205,19 @@ export default function Home({ columnMap, role }: Props) {
         id: key,
         header: () =>
           role === "admin" || role === "moderator" ? (
-            <Button
-              className="btn btn-sm btn-primary"
-            //   disabled={updatedData.length === 0}
+            <button
+              ref={buttonRef}
+              className={clsx("btn-primary btn w-48", loading && "loading")}
+              //   disabled={updatedData.length === 0}
               onClick={handleSave}
-              loading={loading}
+              onMouseDown={() =>
+                setTimeout(() => {
+                  buttonRef?.current?.click();
+                }, 400)
+              }
             >
               ΑΠΟΘΗΚΕΥΣΗ
-            </Button>
+            </button>
           ) : (
             <span className="w-[4rem]">{title}</span>
           ),
@@ -279,7 +285,6 @@ export default function Home({ columnMap, role }: Props) {
 
     return [shouldSkip, skip] as const;
   }
-
 
   useEffect(() => {
     setTableData(data?.data);
