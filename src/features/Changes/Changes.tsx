@@ -2,7 +2,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import LoadingPage from "../../core/components/Layout/LoadingPage";
 import { useRouter } from "next/router";
-import { useFolderStore } from "@/core/stores/folderStore";
+import { useFolderStore } from "@/core/stores/libraryStore";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { TableCellsIcon, CircleStackIcon } from "@heroicons/react/24/outline";
 import { trpc } from "@/utils/trpc";

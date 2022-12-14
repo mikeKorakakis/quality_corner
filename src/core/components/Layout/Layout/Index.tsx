@@ -21,7 +21,7 @@ import { ReactNode } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "@/config";
 import { Theme } from "./ThemeSelector";
-import { useFolderStore } from "@/core/stores/folderStore";
+import { useLibraryStore } from "@/core/stores/libraryStore";
 import { trpc } from "@/utils/trpc";
 
 const title = APP_NAME;
@@ -40,7 +40,7 @@ const secondaryMenuCation = "Διαχειριστής";
 
 const Layout = ({ children }: Props) => {
   // get authentication status
-  const state = useFolderStore();
+  const state = useLibraryStore();
   const { status, data } = useSession();
   const user = data?.user;
   const role = user?.role;
@@ -56,23 +56,24 @@ const Layout = ({ children }: Props) => {
   const slug = router.query.slug;
 
   // get folders from trpc
-  const { data: folders, isLoading: loadingFolders } =
-    trpc.folder.getAllNoPagination.useQuery();
-    const getFolderDescription = (folder: string) => {
-        const folderData = folders?.find((f) => f.name === folder);
-    if(folderData?.description)
-    return folderData?.description;
-    else 
-    return folder
-    };
+  const { data: libraries, isLoading: loadingLibraries } =
+    trpc.library.getAllNoPagination.useQuery();
+  const getFolderDescription = (library: string) => {
+    const libraryData = libraries?.find((f) => f.name === library);
+    if (libraryData?.description) return libraryData?.description;
+    else return library;
+  };
 
-  const navigation = state.folders.map((folder) => {
+  const navigation = state.libraries.map((library) => {
+    const { data: folders, isLoading: loadingFolders } =
+    trpc.folder.getAllNoPagination.useQuery();
     return {
-      name: folder,
-      href: `/library/${folder}`,
-      current: slug === folder,
+      name: library,
+      href: `/library/${library}`,
+      current: slug === library,
       icon: BookOpenIcon,
       count: null,
+      folders : 
     };
   });
 
@@ -101,7 +102,6 @@ const Layout = ({ children }: Props) => {
       "";
     return urlMap[path];
   };
-
 
   const onSignout = () => {
     signOut({ callbackUrl: POST_LOGOUT_REDIRECT_URL });
@@ -277,8 +277,8 @@ const Layout = ({ children }: Props) => {
             <ul className="menu menu-compact flex flex-col p-0 px-4">
               {navigation.map((item) => (
                 <li key={item.name}>
-                  {loadingFolders ? (
-                    <div className="flex animate-pulse gap-4 bg-base-300 h-8 my-1"></div>
+                  {loadingLibraries ? (
+                    <div className="my-1 flex h-8 animate-pulse gap-4 bg-base-300"></div>
                   ) : (
                     <Link href={item.href}>
                       <div
@@ -290,7 +290,9 @@ const Layout = ({ children }: Props) => {
                             aria-hidden="true"
                           />
                         </span>
-                        <span className="flex-1">{getFolderDescription(item.name)}</span>
+                        <span className="flex-1">
+                          {getFolderDescription(item.name)}
+                        </span>
                       </div>
                     </Link>
                   )}

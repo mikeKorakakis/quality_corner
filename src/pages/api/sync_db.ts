@@ -88,18 +88,32 @@ export default async function handler(req: any, res: any) {
         //   folderId: folderId ? folderId.id : 1,
         // });
 
-        if (folderId && !(titleWithoutExtension ==='Thumbs' || titleWithoutExtension === '_Thumbs' ||  titleWithoutExtension ==='thumbs' )) {
-          
+        if (
+          folderId &&
+          !(
+            titleWithoutExtension === "Thumbs" ||
+            titleWithoutExtension === "_Thumbs" ||
+            titleWithoutExtension === "thumbs"
+          )
+        ) {
+          const folder = await prisma.folder.findUnique({
+            where: { name: cat1 },
+          });
+          const subFolder = await prisma.folder.findUnique({
+            where: { name: cat2 },
+          });
           await prisma.book.create({
             data: {
-                title: titleWithoutExtension,
-                category1: cat1,
-                category2: cat2,
-                fileUrl: file,
-                folderId: folderId.id,
-              }
+              title: titleWithoutExtension,
+              category1: cat1,
+              category2: cat2,
+              folderId: folder ? folder.id : null,
+              subFolderId: subFolder ? subFolder.id : null,
+              fileUrl: file,
+              libraryId: folderId.id,
+            },
           });
-        //   itemBuffer = [];
+          //   itemBuffer = [];
         }
       }
       // remove the file from the oldDbFileUrlsArray array

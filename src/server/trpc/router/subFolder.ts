@@ -9,14 +9,14 @@ import {
   updateSchema,
 } from "@/types/zod/folder";
 import { generateFilterParams } from "@/utils/generateFilterParams";
-import { protectedProcedure } from "./../trpc";
+import { protectedProcedure } from "../trpc";
 
-const entity = "folder";
+const entity = "subFolder";
 
-export const folderRouter = router({
+export const subFolderRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
     const { colFilters, sorting } = generateFilterParams(input);
-    const folderCount = await ctx.prisma[entity].count({
+    const subFolderCount = await ctx.prisma[entity].count({
       where: {
         AND: colFilters,
       },
@@ -30,8 +30,8 @@ export const folderRouter = router({
       orderBy: sorting,
     });
 
-    const pageCount = Math.ceil(folderCount / input.pageSize);
-    return { data: folders, pageCount, folderCount };
+    const pageCount = Math.ceil(subFolderCount / input.pageSize);
+    return { data: folders, pageCount, subFolderCount };
   }),
 
   getAllNoPagination: publicProcedure.query(async ({ ctx }) => {
@@ -43,6 +43,18 @@ export const folderRouter = router({
     .query(async ({ input, ctx }) => {
       return ctx.prisma[entity].findUnique({ where: { name: input.name } });
     }),
+
+  getBookGroups: publicProcedure.query(async ({ ctx }) => {
+    const bookGroups = await ctx.prisma.book.groupBy({
+      by: ["folderId"],
+
+      _count: {
+        _all: true,
+      },
+    });
+
+    return bookGroups;
+  }),
 
   update: protectedProcedure
     .input(updateSchema)

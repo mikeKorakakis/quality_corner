@@ -21,8 +21,8 @@ export const updateManySchema = z.array(updateSchema);
 
 export const deleteSchema = getSchema;
 
-export const getAllInFolderSchema = getAllSchema.merge(
-  z.object({ folder: z.string() })
+export const getAllWithParamsSchema = getAllSchema.merge(
+  z.object({ library: z.string(), folder: z.string(), subFolder: z.string() })
 );
 
 export const getAllCatInFolderSchema = z.object({ folder: z.string() });

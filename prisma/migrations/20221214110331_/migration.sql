@@ -9,7 +9,9 @@ CREATE TABLE [dbo].[Book] (
     [description] NVARCHAR(1000),
     [category1] NVARCHAR(1000),
     [category2] NVARCHAR(1000),
-    [folderId] INT NOT NULL,
+    [folderId] INT,
+    [subFolderId] INT,
+    [libraryId] INT,
     [fileUrl] NVARCHAR(1000),
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [Book_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [updatedAt] DATETIME2 NOT NULL,
@@ -18,13 +20,33 @@ CREATE TABLE [dbo].[Book] (
 );
 
 -- CreateTable
+CREATE TABLE [dbo].[Library] (
+    [id] INT NOT NULL IDENTITY(1,1),
+    [name] NVARCHAR(1000) NOT NULL,
+    [description] NVARCHAR(1000),
+    [private] BIT NOT NULL CONSTRAINT [Library_private_df] DEFAULT 0,
+    CONSTRAINT [Library_pkey] PRIMARY KEY CLUSTERED ([id]),
+    CONSTRAINT [Library_name_key] UNIQUE NONCLUSTERED ([name])
+);
+
+-- CreateTable
 CREATE TABLE [dbo].[Folder] (
     [id] INT NOT NULL IDENTITY(1,1),
     [name] NVARCHAR(1000) NOT NULL,
     [description] NVARCHAR(1000),
-    [private] BIT NOT NULL CONSTRAINT [Folder_private_df] DEFAULT 0,
     CONSTRAINT [Folder_pkey] PRIMARY KEY CLUSTERED ([id]),
     CONSTRAINT [Folder_name_key] UNIQUE NONCLUSTERED ([name])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[SubFolder] (
+    [id] INT NOT NULL IDENTITY(1,1),
+    [name] NVARCHAR(1000) NOT NULL,
+    [description] NVARCHAR(1000),
+    [folderId] INT,
+    [libraryId] INT,
+    CONSTRAINT [SubFolder_pkey] PRIMARY KEY CLUSTERED ([id]),
+    CONSTRAINT [SubFolder_name_key] UNIQUE NONCLUSTERED ([name])
 );
 
 -- CreateTable
@@ -76,7 +98,19 @@ CREATE TABLE [dbo].[VerificationToken] (
 );
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Book] ADD CONSTRAINT [Book_folderId_fkey] FOREIGN KEY ([folderId]) REFERENCES [dbo].[Folder]([id]) ON DELETE NO ACTION ON UPDATE CASCADE;
+ALTER TABLE [dbo].[Book] ADD CONSTRAINT [Book_folderId_fkey] FOREIGN KEY ([folderId]) REFERENCES [dbo].[Folder]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Book] ADD CONSTRAINT [Book_subFolderId_fkey] FOREIGN KEY ([subFolderId]) REFERENCES [dbo].[SubFolder]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Book] ADD CONSTRAINT [Book_libraryId_fkey] FOREIGN KEY ([libraryId]) REFERENCES [dbo].[Library]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[SubFolder] ADD CONSTRAINT [SubFolder_folderId_fkey] FOREIGN KEY ([folderId]) REFERENCES [dbo].[Folder]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[SubFolder] ADD CONSTRAINT [SubFolder_libraryId_fkey] FOREIGN KEY ([libraryId]) REFERENCES [dbo].[Library]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[Account] ADD CONSTRAINT [Account_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE CASCADE ON UPDATE CASCADE;

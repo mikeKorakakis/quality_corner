@@ -3,7 +3,7 @@ import { getAllSchema } from "@/types/zod/general";
 import {
   deleteByFolderIdSchema,
   getAllCatInFolderSchema,
-  getAllInFolderSchema,
+  getAllWithParamsSchema,
   transferBooksToFolderSchema,
   updateManySchema,
   updateSchema,
@@ -12,15 +12,17 @@ import { generateFilterParams } from "@/utils/generateFilterParams";
 import { FOLDER_ROOT } from "@/config";
 import { Book } from "@prisma/client";
 
+const entity = "book"
+
 export const bookRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
     const { colFilters, sorting } = generateFilterParams(input);
-    const bookCount = await ctx.prisma.book.count({
+    const bookCount = await ctx.prisma[entity].count({
       where: {
         AND: colFilters,
       },
     });
-    const books = await ctx.prisma.book.findMany({
+    const books = await ctx.prisma[entity].findMany({
       where: {
         AND: colFilters,
       },
@@ -34,17 +36,21 @@ export const bookRouter = router({
   }),
 
   getAllInFolder: publicProcedure
-    .input(getAllInFolderSchema)
+    .input(getAllWithParamsSchema)
     .query(async ({ input, ctx }) => {
       const { colFilters, sorting } = generateFilterParams(input);
+      const library = input.library;
       const folder = input.folder;
-      const bookCount = await ctx.prisma.book.count({
+      const subFolder = input.subFolder;
+      const bookCount = await ctx.prisma[entity].count({
         where: {
-          folder: { name: folder },
+          library: { name: library },
+          folder: { name: folder},
+          subFolder: { name: subFolder},
           AND: colFilters,
         },
       });
-      const books = await ctx.prisma.book.findMany({
+      const books = await ctx.prisma[entity].findMany({
         where: {
           folder: { name: folder },
           AND: colFilters,
@@ -59,7 +65,7 @@ export const bookRouter = router({
     }),
 
   getAllCat1: publicProcedure.query(async ({ ctx }) => {
-    const books = await ctx.prisma.book.findMany({
+    const books = await ctx.prisma[entity].findMany({
       select: { category1: true },
       distinct: ["category1"],
     });
@@ -69,7 +75,7 @@ export const bookRouter = router({
   getAllCat1InFolder: publicProcedure
     .input(getAllCatInFolderSchema)
     .query(async ({ input, ctx }) => {
-      const books = await ctx.prisma.book.findMany({
+      const books = await ctx.prisma[entity].findMany({
         where: { folder: { name: input.folder } },
         select: { category1: true },
         distinct: ["category1"],
@@ -78,7 +84,7 @@ export const bookRouter = router({
     }),
 
   getAllCat2: publicProcedure.query(async ({ ctx }) => {
-    const books = await ctx.prisma.book.findMany({
+    const books = await ctx.prisma[entity].findMany({
       select: { category2: true },
       distinct: ["category2"],
     });
@@ -88,7 +94,7 @@ export const bookRouter = router({
   getAllCat2InFolder: publicProcedure
     .input(getAllCatInFolderSchema)
     .query(async ({ input, ctx }) => {
-      const books = await ctx.prisma.book.findMany({
+      const books = await ctx.prisma[entity].findMany({
         where: { folder: { name: input.folder } },
         select: { category2: true },
         distinct: ["category2"],
@@ -99,7 +105,7 @@ export const bookRouter = router({
   update: publicProcedure
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
-      return ctx.prisma.book.update({
+      return ctx.prisma[entity].update({
         where: { id: input.id },
         data: { description: input?.description },
       });
@@ -110,7 +116,7 @@ export const bookRouter = router({
     .mutation(async ({ input, ctx }) => {
       await ctx.prisma.$transaction(
         input.map((book) => {
-          return ctx.prisma.book.update({
+          return ctx.prisma[entity].update({
             where: { id: book.id },
             data: { description: book?.description },
           });
@@ -121,7 +127,7 @@ export const bookRouter = router({
   tranferToOtherFolder: protectedProcedure
     .input(transferBooksToFolderSchema)
     .mutation(async ({ input, ctx }) => {
-      const books = await ctx.prisma.book.findMany({
+      const books = await ctx.prisma[entity].findMany({
         where: { folder: { id: input.fromId } },
       });
 
@@ -164,14 +170,14 @@ export const bookRouter = router({
       //update with loop
       for (const book of filteredBooks) {
         book &&
-          (await ctx.prisma.book.update({
+          (await ctx.prisma[entity].update({
             where: { id: book.id },
             data: book,
           }));
       }
       //update with prisma
 
-      //   await ctx.prisma.book.updateMany({
+      //   await ctx.prisma[entity].updateMany({
       //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //     //@ts-ignore
       //     where: { id: { in: filteredBooks.map((book) => book.id) } },
@@ -183,7 +189,7 @@ export const bookRouter = router({
   deleteByFolderId: protectedProcedure
     .input(deleteByFolderIdSchema)
     .mutation(async ({ input, ctx }) => {
-      return ctx.prisma.book.deleteMany({
+      return ctx.prisma[entity].deleteMany({
         where: { folderId: input.id },
       });
     }),

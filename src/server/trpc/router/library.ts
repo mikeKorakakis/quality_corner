@@ -7,13 +7,13 @@ import {
   getSchema,
   updateManySchema,
   updateSchema,
-} from "@/types/zod/folder";
+} from "@/types/zod/library";
 import { generateFilterParams } from "@/utils/generateFilterParams";
-import { protectedProcedure } from "./../trpc";
+import { protectedProcedure } from "../trpc";
 
-const entity = "folder";
+const entity = "library";
 
-export const folderRouter = router({
+export const libraryRouter = router({
   getAll: publicProcedure.input(getAllSchema).query(async ({ input, ctx }) => {
     const { colFilters, sorting } = generateFilterParams(input);
     const folderCount = await ctx.prisma[entity].count({
@@ -44,6 +44,17 @@ export const folderRouter = router({
       return ctx.prisma[entity].findUnique({ where: { name: input.name } });
     }),
 
+  getBookGroups: publicProcedure.query(async ({ ctx }) => {
+    const bookGroups = await ctx.prisma.book.groupBy({
+      by: ["libraryId"],
+      _count: {
+        _all: true,
+      },
+    });
+
+    return bookGroups;
+  }),
+
   update: protectedProcedure
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {
@@ -52,6 +63,7 @@ export const folderRouter = router({
         data: {
           description: input.description,
           name: input.name,
+          private: input.private,
         },
       });
     }),
@@ -66,6 +78,7 @@ export const folderRouter = router({
             data: {
               description: folder.description,
               name: folder.name,
+              private: folder.private,
             },
           });
         })

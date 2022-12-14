@@ -10,13 +10,13 @@ import "react-datepicker/dist/react-datepicker.css";
 
 import { trpc } from "../utils/trpc";
 import { useEffect } from "react";
-import { useFolderStore } from "@/core/stores/folderStore";
+import { useLibraryStore } from "@/core/stores/libraryStore";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
   pageProps: { session, ...pageProps },
 }) => {
-  const state = useFolderStore();
+  const state = useLibraryStore();
 
   useEffect(() => {
     const theme = localStorage.getItem("theme");
@@ -24,12 +24,12 @@ const MyApp: AppType<{ session: Session | null }> = ({
   }, []);
 
   useEffect(() => {
-    const fetchFolders = async () => {
-      const res = await fetch("/api/read_folders");
+    const fetchLibraries = async () => {
+      const res = await fetch("/api/read_libraries");
       const data = await res.json();
-      state.setFolders(data);
+      state.setLibraries(data);
     };
-    fetchFolders();
+    fetchLibraries();
   }, []);
 
   return (
