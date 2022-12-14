@@ -22,35 +22,38 @@ const createFoldersInDb = async (folderPath: string) => {
           private: false,
         },
       });
-      const folders = fs.readdirSync(folderPath + "/" + library);
-      folders.forEach(async (folder) => {
-        const folderExists = await prisma.folder.findUnique({
-          where: { name: folder },
+    }
+    const folders = fs.readdirSync(folderPath + "/" + library);
+    folders.forEach(async (folder) => {
+      let folderExists = await prisma.folder.findFirst({
+        where: { name: folder, library: { name: library } },
+      });
+      if (!folderExists) {
+        folderExists = await prisma.folder.create({
+          data: {
+            name: folder,
+            library: { connect: { name: library } },
+          },
         });
-        if (!folderExists) {
-          await prisma.folder.create({
+      }
+      const subFolders = fs.readdirSync(
+        folderPath + "/" + library + "/" + folder
+      );
+      subFolders.forEach(async (subFolder) => {
+        const subFolderExists = await prisma.subFolder.findFirst({
+          where: { name: subFolder, folder: { name: folder } },
+        });
+        if (!subFolderExists && folderExists) {
+          await prisma.subFolder.create({
             data: {
-              name: folder,
+              name: subFolder,
+              folder: { connect: { id : folderExists.id } },
+              library: { connect: { name: library } },
             },
           });
         }
-        const subFolders = fs.readdirSync(
-          folderPath + "/" + library + "/" + folder
-        );
-        subFolders.forEach(async (subFolder) => {
-          const subFolderExists = await prisma.subFolder.findUnique({
-            where: { name: subFolder },
-          });
-          if (!subFolderExists) {
-            await prisma.subFolder.create({
-              data: {
-                name: subFolder,
-              },
-            });
-          }
-        });
       });
-    }
+    });
   });
 
   //delete folders in db that are not in the folderPath

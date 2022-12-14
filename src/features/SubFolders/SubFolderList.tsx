@@ -9,7 +9,7 @@ const columns = new Map<string, string>([
   ["index", "A/A"],
   ["name", "ΟΝΟΜΑ"],
   ["description", "ΠΕΡΙΓΡΑΦΗ"],
-  ["library", "Βιβλιοθήκη"],
+  ["folder", "ΦΑΚΕΛΟΣ"]
 ]);
 
 const FolderList = () => {
@@ -29,7 +29,7 @@ const FolderList = () => {
   return (
     <div className="not-prose mx-auto mt-6 mb-10 ">
       <div className="flex justify-between">
-        <h1 className="ml-20 mb-5 text-3xl font-light">ΦΑΚΕΛΟΙ</h1>
+        <h1 className="ml-20 mb-5 text-3xl font-light">ΥΠΟΦΑΚΕΛΟΙ</h1>
       </div>
       <div className="w-full overflow-x-auto">
         <Table

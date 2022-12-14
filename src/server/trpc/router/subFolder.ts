@@ -3,11 +3,12 @@ import { getAllSchema } from "@/types/zod/general";
 import {
   createSchema,
   deleteSchema,
+  getByFolderSchema,
   getByNameSchema,
   getSchema,
   updateManySchema,
   updateSchema,
-} from "@/types/zod/folder";
+} from "@/types/zod/subFolder";
 import { generateFilterParams } from "@/utils/generateFilterParams";
 import { protectedProcedure } from "../trpc";
 
@@ -28,6 +29,8 @@ export const subFolderRouter = router({
       skip: input.pageIndex * input.pageSize,
       take: input.pageSize,
       orderBy: sorting,
+      select: { id: true, name: true, description: true, folder: true },
+
     });
 
     const pageCount = Math.ceil(subFolderCount / input.pageSize);
@@ -41,8 +44,15 @@ export const subFolderRouter = router({
   getByName: publicProcedure
     .input(getByNameSchema)
     .query(async ({ input, ctx }) => {
-      return ctx.prisma[entity].findUnique({ where: { name: input.name } });
+      return ctx.prisma[entity].findFirst({ where: { name: input.name } });
     }),
+
+    getAllByFolder: publicProcedure
+    .input(getByFolderSchema)
+    .query(async ({ input, ctx }) => {
+      return ctx.prisma[entity].findMany({ where: { folder: {name:input.folder} } });
+    }),
+
 
   getBookGroups: publicProcedure.query(async ({ ctx }) => {
     const bookGroups = await ctx.prisma.book.groupBy({
@@ -90,9 +100,9 @@ export const subFolderRouter = router({
       return ctx.prisma[entity].delete({ where: { id: input.id } });
     }),
 
-  create: protectedProcedure
-    .input(createSchema)
-    .mutation(async ({ input, ctx }) => {
-      return ctx.prisma[entity].create({ data: input });
-    }),
+//   create: protectedProcedure
+//     .input(createSchema)
+//     .mutation(async ({ input, ctx }) => {
+//       return ctx.prisma[entity].create({ data: input });
+//     }),
 });

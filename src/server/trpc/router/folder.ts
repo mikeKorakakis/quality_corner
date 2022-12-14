@@ -3,6 +3,7 @@ import { getAllSchema } from "@/types/zod/general";
 import {
   createSchema,
   deleteSchema,
+  getByLibrarySchema,
   getByNameSchema,
   getSchema,
   updateManySchema,
@@ -28,6 +29,7 @@ export const folderRouter = router({
       skip: input.pageIndex * input.pageSize,
       take: input.pageSize,
       orderBy: sorting,
+      select: { id: true, name: true, description: true, library: true },
     });
 
     const pageCount = Math.ceil(folderCount / input.pageSize);
@@ -38,10 +40,29 @@ export const folderRouter = router({
     return ctx.prisma[entity].findMany();
   }),
 
-  getByName: publicProcedure
-    .input(getByNameSchema)
+  getBookGroups: publicProcedure.query(async ({ ctx }) => {
+    const bookGroups = await ctx.prisma.book.groupBy({
+      by: ["libraryId"],
+      _count: {
+        _all: true,
+      },
+    });
+
+    return bookGroups;
+  }),
+
+  //   getByName: publicProcedure
+  //     .input(getByNameSchema)
+  //     .query(async ({ input, ctx }) => {
+  //       return ctx.prisma[entity].findUnique({ where: { name: input.name } });
+  //     }),
+
+  getAllByLibrary: publicProcedure
+    .input(getByLibrarySchema)
     .query(async ({ input, ctx }) => {
-      return ctx.prisma[entity].findUnique({ where: { name: input.name } });
+      return ctx.prisma[entity].findMany({
+        where: { library: { name: input.library } },
+      });
     }),
 
   update: protectedProcedure
@@ -78,9 +99,9 @@ export const folderRouter = router({
       return ctx.prisma[entity].delete({ where: { id: input.id } });
     }),
 
-  create: protectedProcedure
-    .input(createSchema)
-    .mutation(async ({ input, ctx }) => {
-      return ctx.prisma[entity].create({ data: input });
-    }),
+  //   create: protectedProcedure
+  //     .input(createSchema)
+  //     .mutation(async ({ input, ctx }) => {
+  //       return ctx.prisma[entity].create({ data: input });
+  //     }),
 });

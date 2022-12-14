@@ -3,7 +3,7 @@ import NotFound from "@/features/NotFound";
 
 export default function NotFoundPage() {
   return (
-    <Page navbar={false} title="Not Found">
+    <Page navbar={false} title="Δεν βρέθηκε">
       <NotFound />
     </Page>
   );

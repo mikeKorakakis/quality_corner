@@ -23,16 +23,11 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  AppRouterNames,
-  AppRouterOutputTypes,
-} from "@/server/trpc/router/_app";
+import { AppRouterOutputTypes } from "@/server/trpc/router/_app";
 import { notify } from "@/utils/notify";
 import { trpc } from "@/utils/trpc";
-import { useModalStore } from "@/core/stores/modalStore";
 import Skeleton from "@/core/components/Layout/Skeleton";
-import { useSession } from "next-auth/react";
-import { Book } from "@prisma/client";
+import { Folder } from "@prisma/client";
 import Button from "@/core/components/LoadingButton";
 import clsx from "clsx";
 
@@ -42,84 +37,88 @@ import clsx from "clsx";
 //   [K in GetKeys<U>]: U extends Record<K, infer T> ? T : never;
 // };
 // type Transformed = UnionToIntersection<test>
-const router = "book";
-const getAllProcedure = "getAllWithParams";
-const getAllCat1 = "getAllCat1InFolder";
-const getAllCat2 = "getAllCat2InFolder";
+const router = "subFolder";
+const getAllProcedure = "getAll";
+const getAllByFolderProcedure = "getAllByFolder";
+const getAllNoPaginationProcedure = "getAllNoPagination";
 const updateProcedure = "updateMany";
 interface Props {
-  library: string;
   columnMap: Map<unknown, string>;
   role: string;
-  folder?: string;
-  subFolder?: string;
 }
 
-// declare module '@tanstack/react-table' {
-//     interface TableMeta<TData extends RowData> {
-//       updateData: (rowIndex: number, columnId: string, value: unknown) => void
-//     }
-//   }
 const defaultColumn: Partial<ColumnDef<any>> = {
   cell: ({ getValue, row, column: { id }, table }) => {
-    const originalRow = row.original;
-    const initialValue = getValue() as string;
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const [value, setValue] = useState(initialValue);
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    // When the input is blurred, we'll call our table meta's updateData function
+    if (id === "private") {
+      // const originalRow = row.original;
+      const initialValue = getValue() as boolean;
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    //   useEffect(() => {
-    //     if (inputRef.current) {
-    //       inputRef.current.addEventListener('click', () => {
-    //         inputRef.current.focus();
-    //       });
-    //     }
-    //   }, []);
-    const onBlur = () => {
-      // const updatedRow = {
-      //   ...originalRow,
-      //   description: value,
-      // };
-      // setUpdatedData((updatedData) => [
-      //   ...updatedData.filter((x) => x.id !== originalRow.id),
-      //   updatedRow,
-      // ]);
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      table.options.meta?.updateData(row.index, id, value);
+      const handleChange = (val: boolean) => {
+        //   const updatedRow = {
+        //     ...originalRow,
+        //     private: val,
+        //   };
+        //   setUpdatedData((updatedData) => [
+        //     ...updatedData.filter((x) => x.id !== originalRow.id),
+        //     updatedRow,
+        //   ]);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        table.options.meta?.updateData(row.index, id, val);
+        // table.options.meta?.updateData(row.index, id, val);
+        //   update({ ...originalRow, private: val, descripFtion: "dt" });
+      };
 
-      //   value && update({ ...originalRow, description: value });
-    };
+      return (
+        <input
+          type="checkbox"
+          className="checkbox ml-20"
+          checked={initialValue ?? false}
+          onChange={(e) => handleChange(e.target.checked)}
+        />
+      );
+    } else if (id === "description") {
+      // const originalRow = row.original;
+      const initialValue = getValue() as string;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [value, setValue] = useState(initialValue);
+      // When the input is blurred, we'll call our table meta's updateData function
+      const onBlur = () => {
+        //   const updatedRow = {
+        //     ...originalRow,
+        //     description: value,
+        //   };
+        //   setUpdatedData((updatedData) => [
+        //     ...updatedData.filter((x) => x.id !== originalRow.id),
+        //     updatedRow,
+        //   ]);
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        table.options.meta?.updateData(row.index, id, value);
 
-    // If the initialValue is changed external, sync it up with our state
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useEffect(() => {
-      setValue(initialValue);
-    }, [initialValue]);
+        //   value && update({ ...originalRow, description: value });
+      };
 
-    return (
-      <input
-        className="input-bordered input w-72"
-        value={value ?? ""}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={onBlur}
-      />
-    );
+      // If the initialValue is changed external, sync it up with our state
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
+
+      return (
+        <input
+          className="input-bordered input w-52"
+          value={value ?? ""}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={onBlur}
+        />
+      );
+    }
   },
 };
 
-export default function Home({
-  library,
-  folder,
-  subFolder,
-  columnMap,
-  role,
-}: Props) {
-  //   const [updatedData, setUpdatedData] = useState<Book[]>([]);
+export default function Home({ columnMap, role }: Props) {
   const [loading, setLoading] = useState(false);
-
   // GET CURRENT USER FROM NEXT-AUTH
   type ProcedureOutput =
     AppRouterOutputTypes[typeof router][typeof getAllProcedure];
@@ -134,14 +133,13 @@ export default function Home({
     pageSize: 10,
   });
 
+  const [tableData, setTableData] = useState(() => data?.data);
+
   const fetchDataOptions = {
     pageIndex,
     pageSize,
     sorting,
     columnFilters,
-    library,
-    folder,
-    subFolder,
   };
   const { isLoading, error, data } = trpc[router][getAllProcedure].useQuery(
     fetchDataOptions,
@@ -152,16 +150,13 @@ export default function Home({
       refetchOnWindowFocus: false,
     }
   );
-
-  const [tableData, setTableData] = useState(() => data?.data);
-
   const utils = trpc.useContext();
 
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
     onSuccess() {
-      // data && utils.book.getAll.setData({data: [], pageCount: data.pageCount});
       utils[router][getAllProcedure].invalidate();
-      //   utils[router][getProcedure].invalidate();
+      utils[router][getAllByFolderProcedure].invalidate();
+      utils[router][getAllNoPaginationProcedure].invalidate();
     },
     onError(error) {
       notify({ message: error.message, type: "error" });
@@ -191,6 +186,7 @@ export default function Home({
   };
 
   const columnsArray = Array.from(columnMap);
+
   const buttonRef = useRef<HTMLButtonElement>(null);
   const columnHelper = createColumnHelper<DataType>();
   const columns = columnsArray.map((innerArr) => {
@@ -201,10 +197,7 @@ export default function Home({
         id: key,
         cell: () => title,
       });
-    } else if (
-      key === "description" &&
-      (role == "admin" || role == "moderator")
-    ) {
+    } else if (key === "private" || key === "description") {
       return columnHelper.accessor(key, {
         id: key,
         header: () => <span className="w-[4rem]">{title}</span>,
@@ -270,15 +263,6 @@ export default function Home({
     }
   });
 
-  // return columns;
-  //   }, [columnMap, columnHelper]);
-
-  useEffect(() => {
-    if (error) {
-      notify({ message: error.message, type: "error" });
-    }
-  }, [error]);
-
   const defaultData = useMemo(() => [], []);
 
   const pagination = useMemo(
@@ -288,7 +272,6 @@ export default function Home({
     }),
     [pageIndex, pageSize]
   );
-
   function useSkipper() {
     const shouldSkipRef = useRef(true);
     const shouldSkip = shouldSkipRef.current;
@@ -343,7 +326,7 @@ export default function Home({
     meta: {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
-      updateData: (rowIndex: number, columnId: string, value: string) => {
+      updateData: (rowIndex: number, columnId: number, value: string) => {
         // Skip age index reset until after next rerender
         skipAutoResetPageIndex();
         setTableData(
@@ -400,11 +383,7 @@ export default function Home({
                       <div>
                         {header.column.getCanFilter() ? (
                           <div>
-                            <Filter
-                              column={header.column}
-                              table={table}
-                              library={library}
-                            />
+                            <Filter column={header.column} table={table} />
                           </div>
                         ) : null}
                       </div>
@@ -453,7 +432,7 @@ export default function Home({
           <th></th>
           <th colSpan={20}>
             <div className="mb-1 text-[1rem]">
-              # ΑΠΟΤΕΛΕΣΜΑΤΑ: {data?.bookCount}
+              # ΑΠΟΤΕΛΕΣΜΑΤΑ: {data?.subFolderCount ?? 0}
             </div>
             <div className="btn-group ml-2  ">
               <button
@@ -568,15 +547,10 @@ function DebouncedInput({
 function Filter({
   column,
   table,
-  library,
 }: {
   column: Column<any, unknown>;
   table: ReactTable<any>;
-  library: string;
 }) {
-  //   const { data: cat1 } = trpc[router][getAllCat1].useQuery({ library });
-  //   const { data: cat2 } = trpc[router][getAllCat2].useQuery({ library });
-
   const firstValue = table
     .getPreFilteredRowModel()
     .flatRows[0]?.getValue(column.id);
@@ -590,51 +564,6 @@ function Filter({
         : Array.from(column.getFacetedUniqueValues().keys()).sort(),
     [column, firstValue]
   );
-  //   if (column.id === "category1") {
-  //     return (
-  //       <>
-  //         {cat1 && (
-  //           <datalist id={column.id + "list"}>
-  //             {cat1.slice(0, 5000).map((value: any, i) => (
-  //               <option value={value.category1} key={i} />
-  //             ))}
-  //           </datalist>
-  //         )}
-  //         <DebouncedInput
-  //           type="text"
-  //           value={(columnFilterValue ?? "") as string}
-  //           onChange={(value) => column.setFilterValue(value)}
-  //           placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
-  //           className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
-  //           list={column.id + "list"}
-  //         />
-  //         <div className="h-1" />
-  //       </>
-  //     );
-  //   }
-
-  //   if (column.id === "category2") {
-  //     return (
-  //       <>
-  //         {cat2 && (
-  //           <datalist id={column.id + "list"}>
-  //             {cat2.slice(0, 5000).map((value: any, i) => (
-  //               <option value={value.category2} key={i} />
-  //             ))}
-  //           </datalist>
-  //         )}
-  //         <DebouncedInput
-  //           type="text"
-  //           value={(columnFilterValue ?? "") as string}
-  //           onChange={(value) => column.setFilterValue(value)}
-  //           placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
-  //           className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
-  //           list={column.id + "list"}
-  //         />
-  //         <div className="h-1" />
-  //       </>
-  //     );
-  //   }
 
   return typeof firstValue === "number" ? (
     <div>

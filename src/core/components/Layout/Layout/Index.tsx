@@ -15,14 +15,17 @@ import {
   UserCircleIcon,
   ArrowsRightLeftIcon,
   FolderOpenIcon,
+  Bars2Icon,
+  BuildingLibraryIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
-import { ReactNode } from "react";
+import { ReactNode, Fragment } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { APP_NAME, POST_LOGOUT_REDIRECT_URL } from "@/config";
 import { Theme } from "./ThemeSelector";
 import { useLibraryStore } from "@/core/stores/libraryStore";
 import { trpc } from "@/utils/trpc";
+import { Folder } from "@prisma/client";
 
 const title = APP_NAME;
 const [title0, title1] = title.split(" ");
@@ -53,38 +56,48 @@ const Layout = ({ children }: Props) => {
       : "Χρήστης";
   const isLoggedIn = status === "authenticated";
   const router = useRouter();
-  const slug = router.query.slug;
-
+  const sl = Array.isArray(router.query.slug) ? router.query.slug : [router.query.slug] as string[];
+  const [libraryUrl,folderUrl,subFolderUrl] = sl
   // get folders from trpc
   const { data: libraries, isLoading: loadingLibraries } =
     trpc.library.getAllNoPagination.useQuery();
-  const getFolderDescription = (library: string) => {
-    const libraryData = libraries?.find((f) => f.name === library);
+  const getLibraryDescription = (library: string) => {
+    const libraryData = libraries && libraries?.find((f) => f.name === library);
     if (libraryData?.description) return libraryData?.description;
     else return library;
-  };
+  };  
 
   const navigation = state.libraries.map((library) => {
-    const { data: folders, isLoading: loadingFolders } =
-    trpc.folder.getAllNoPagination.useQuery();
     return {
       name: library,
       href: `/library/${library}`,
-      current: slug === library,
+      current: libraryUrl === library,
       icon: BookOpenIcon,
-      count: null,
-      folders : 
     };
   });
 
   const adminNavigation = [
     {
+        name: "Βιβλιοθήκες",
+        href: "/libraries",
+        current: router.pathname.toLowerCase() === "/libraries",
+        icon: BuildingLibraryIcon,
+        count: null,
+      },
+    {
       name: "Φάκελοι",
       href: "/folders",
-      current: router.pathname === "/folders",
+      current: router.pathname.toLowerCase() === "/folders",
       icon: FolderIcon,
       count: null,
     },
+    {
+        name: "Υποφάκελοι",
+        href: "/subFolders",
+        current: router.pathname.toLowerCase() === "/subfolders",
+        icon: FolderOpenIcon,
+        count: null,
+      },
     {
       name: "Αλλαγές",
       href: "/changes",
@@ -177,8 +190,6 @@ const Layout = ({ children }: Props) => {
                   <UserCircleIcon className=" h-8 w-8" />
                 </div>
                 <Theme />
-                {/* <Theme/>
-              <Language/> */}
                 {
                   <div title="Change Theme" className="dropdown-end dropdown ">
                     <div
@@ -275,26 +286,35 @@ const Layout = ({ children }: Props) => {
             </div>
             <div className="h-4" />
             <ul className="menu menu-compact flex flex-col p-0 px-4">
-              {navigation.map((item) => (
-                <li key={item.name}>
+              {navigation.map((library) => (
+                <li key={library.name}>
                   {loadingLibraries ? (
                     <div className="my-1 flex h-8 animate-pulse gap-4 bg-base-300"></div>
                   ) : (
-                    <Link href={item.href}>
-                      <div
-                        className={clsx("flex gap-4", item.current && "active")}
-                      >
-                        <span className="flex-none">
-                          <item.icon
-                            className={"mr-4 h-6 w-6"}
-                            aria-hidden="true"
-                          />
-                        </span>
-                        <span className="flex-1">
-                          {getFolderDescription(item.name)}
-                        </span>
-                      </div>
-                    </Link>
+                    <LibraryLink
+                      href={library.href}
+                      current={library.current}
+                      libraryDescription={getLibraryDescription(library.name)}
+                      libraryName={library.name}
+                      folderUrl={folderUrl || ''}
+                      subFolderUrl={subFolderUrl || ''}
+                      key={library.name}
+                    />
+                    // <Link href={item.href}>
+                    //   <div
+                    //     className={clsx("flex gap-4", item.current && "active")}
+                    //   >
+                    //     <span className="flex-none">
+                    //       <item.icon
+                    //         className={"mr-4 h-6 w-6"}
+                    //         aria-hidden="true"
+                    //       />
+                    //     </span>
+                    //     <span className="flex-1">
+                    //       {getLibraryDescription(item.name)}
+                    //     </span>
+                    //   </div>
+                    // </Link>
                   )}
                 </li>
               ))}
@@ -343,5 +363,108 @@ const Layout = ({ children }: Props) => {
     </>
   );
 };
+
+interface LibraryLinkProps {
+  href: string;
+  current: boolean;
+  libraryDescription: string;
+  libraryName: string;
+  folderUrl: string;
+  subFolderUrl: string;
+}
+
+const LibraryLink = ({
+  href,
+  current,
+  libraryDescription,
+  libraryName,
+  folderUrl,
+  subFolderUrl
+}: LibraryLinkProps) => {
+  return (
+    <>
+      <Link href={href}>
+        <div className={clsx("flex gap-4 font-extrabold text-xl ", current && "active")}>
+          <span className="flex-none">
+            <BookOpenIcon className={"mr-4 h-6 w-6"} aria-hidden="true" />
+          </span>
+          <span className="flex-1">{libraryDescription}</span>
+        </div>
+      </Link>
+      <FolderLink folderUrl={folderUrl} subFolderUrl={subFolderUrl} library={libraryName} />
+    </>
+  );
+};
+
+interface FolderLinkProps {
+  library: string;
+  folderUrl: string;
+  subFolderUrl: string;
+}
+
+const FolderLink = ({ library, folderUrl, subFolderUrl }: FolderLinkProps) => {
+  const { data: folders, isLoading: loadingFolders } =
+    trpc.folder.getAllByLibrary.useQuery({ library });
+  if (loadingFolders) return  <Skeleton/>;
+
+  return (
+    <>
+      {folders?.map((folder) => (
+        <Fragment key={folder.id}>
+          <Link href={`/library/${library}/${folder.name}`} key={folder.id}>
+            <div className={clsx("flex gap-4  mt-1 ", folderUrl === folder.name && "active")}>
+              <span className="flex-none">
+                <Bars2Icon className="mr-4 h-6 w-6" aria-hidden="true" />
+              </span>
+              <span className="flex-1 font-bold" >
+                {folder.description ?? folder.name}
+              </span>
+            </div>
+          </Link>
+          <SubFolderLink subFolderUrl={subFolderUrl} library={library} folder={folder.name} />
+        </Fragment>
+      ))}
+    </>
+  );
+};
+
+interface SubFolderLinkProps {
+  library: string;
+  folder: string;
+  subFolderUrl: string;
+}
+
+const SubFolderLink = ({ library, folder, subFolderUrl }: SubFolderLinkProps) => {
+  const { data: subFolders, isLoading: loadingSubFolders } =
+    trpc.subFolder.getAllByFolder.useQuery({ folder });
+  if (loadingSubFolders) return <Skeleton/>;
+
+  return (
+    <>
+      {subFolders?.map((subFolder) => (
+        <Link
+          href={`/library/${library}/${folder}/${subFolder.name}`}
+          key={subFolder.id}
+        >
+          <div className={clsx("flex gap-4 pl-10 mt-1 ", subFolderUrl===subFolder.name && "active")}>
+            <span className="flex-none">
+              <Bars3Icon className="mr-4 h-6 w-6" aria-hidden="true" />
+            </span>
+            <span className="flex-1">
+              {subFolder.description ?? subFolder.name}
+            </span>
+          </div>
+        </Link>
+
+      ))}
+    </>
+  );
+};
+
+const Skeleton = () => {
+    return <div className="my-1 flex h-8 animate-pulse gap-4 bg-base-300"></div>
+}
+
+
 
 export default Layout;

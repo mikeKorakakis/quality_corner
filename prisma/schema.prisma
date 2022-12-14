@@ -18,11 +18,9 @@ model Book {
     id          Int        @id @default(autoincrement())
     title       String?
     description String?
-    category1   String?
-    category2   String?
     folder      Folder?    @relation(fields: [folderId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     folderId    Int?
-    subfolder   SubFolder? @relation(fields: [subFolderId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    subFolder   SubFolder? @relation(fields: [subFolderId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     subFolderId Int?
     library     Library?   @relation(fields: [libraryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
     libraryId   Int?
@@ -38,12 +36,15 @@ model Library {
     private     Boolean     @default(false)
     books       Book[]
     subFolders  SubFolder[]
+    folders     Folder[]
 }
 
 model Folder {
     id          Int         @id @default(autoincrement())
-    name        String      @unique
+    name        String      
     description String?
+    library     Library  @relation(fields: [libraryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+    libraryId   Int
     books       Book[]
     subFolders  SubFolder[]
 }
@@ -53,9 +54,9 @@ model SubFolder {
     name        String   
     description String?
     books       Book[]
-    folderId    Int?
-    folder      Folder?  @relation(fields: [folderId], references: [id])
-    Library     Library? @relation(fields: [libraryId], references: [id])
+    folderId    Int
+    folder      Folder  @relation(fields: [folderId], references: [id])
+    library     Library? @relation(fields: [libraryId], references: [id])
     libraryId   Int?
 }
 

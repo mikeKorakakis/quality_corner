@@ -21,13 +21,13 @@ const walk = function (dir: string) {
 
 export default async function handler(req: any, res: any) {
   try {
-    const folder = req.query.folder;
-    const folderPath = FOLDER_ROOT + "/" + folder;
-    if (!folder) return res.status(400).send("Δεν ορίστηκε φάκελος");
+    const library: string = req.query.library;
+    const folderPath = FOLDER_ROOT + "/" + library;
+    if (!library) return res.status(400).send("Δεν ορίστηκε βιβλιοθήκη");
     const files = walk(folderPath);
     const prisma = new PrismaClient();
     const oldDbFileUrls = await prisma.book.findMany({
-      where: { fileUrl: { not: null }, folder: { name: folder } },
+      where: { fileUrl: { not: null }, library: { name: library } },
       select: { fileUrl: true },
     });
     // remove null values from the array
@@ -39,7 +39,7 @@ export default async function handler(req: any, res: any) {
       }
     });
     // let itemBuffer: any[] = [];
-    files.forEach(async (file: string, i: number) => {
+    files.forEach(async (file: string) => {
       const withoutPublic = file.replace(folderPath + "/", "");
       // split the string by the / character
       const split = withoutPublic.split("/");
@@ -75,8 +75,18 @@ export default async function handler(req: any, res: any) {
         });
         return;
       } else {
-        const folderId = await prisma.folder.findUnique({
-          where: { name: folder },
+        const folderId = await prisma.folder.findFirst({
+          where: { name: cat1, library: { name: library } },
+          select: { id: true },
+        });
+
+        const subFolderId = await prisma.subFolder.findFirst({
+          where: {
+            name: cat2,
+            folder: { name: cat1 },
+            library: { name: library },
+          },
+
           select: { id: true },
         });
 
@@ -96,21 +106,15 @@ export default async function handler(req: any, res: any) {
             titleWithoutExtension === "thumbs"
           )
         ) {
-          const folder = await prisma.folder.findUnique({
-            where: { name: cat1 },
-          });
-          const subFolder = await prisma.folder.findUnique({
-            where: { name: cat2 },
-          });
+            const fid =  folderId ? folderId.id : 1;
+            const sid = subFolderId ? subFolderId.id : 1;
           await prisma.book.create({
             data: {
               title: titleWithoutExtension,
-              category1: cat1,
-              category2: cat2,
-              folderId: folder ? folder.id : null,
-              subFolderId: subFolder ? subFolder.id : null,
+              folder: {connect: {id: fid}},
+              subFolder: {connect: {id: sid}},
               fileUrl: file,
-              libraryId: folderId.id,
+              library: { connect: { name: library } },
             },
           });
           //   itemBuffer = [];

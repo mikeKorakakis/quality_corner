@@ -40,6 +40,7 @@ import clsx from "clsx";
 const router = "folder";
 const getAllProcedure = "getAll";
 const getAllNoPaginationProcedure = "getAllNoPagination";
+const getAllByLibrary = "getAllByLibrary";
 const updateProcedure = "updateMany";
 interface Props {
   columnMap: Map<unknown, string>;
@@ -150,10 +151,11 @@ export default function Home({ columnMap, role }: Props) {
     }
   );
   const utils = trpc.useContext();
-
+console.log('tata',data?.data)
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
     onSuccess() {
       utils[router][getAllProcedure].invalidate();
+      utils[router][getAllByLibrary].invalidate();
       utils[router][getAllNoPaginationProcedure].invalidate();
     },
     onError(error) {

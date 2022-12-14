@@ -2,7 +2,6 @@ import { router, publicProcedure, protectedProcedure } from "../trpc";
 import { getAllSchema } from "@/types/zod/general";
 import {
   deleteByFolderIdSchema,
-  getAllCatInFolderSchema,
   getAllWithParamsSchema,
   transferBooksToFolderSchema,
   updateManySchema,
@@ -35,7 +34,7 @@ export const bookRouter = router({
     return { data: books, pageCount, bookCount };
   }),
 
-  getAllInFolder: publicProcedure
+  getAllWithParams: publicProcedure
     .input(getAllWithParamsSchema)
     .query(async ({ input, ctx }) => {
       const { colFilters, sorting } = generateFilterParams(input);
@@ -52,7 +51,9 @@ export const bookRouter = router({
       });
       const books = await ctx.prisma[entity].findMany({
         where: {
-          folder: { name: folder },
+            library: { name: library },
+            folder: { name: folder},
+            subFolder: { name: subFolder},
           AND: colFilters,
         },
         skip: input.pageIndex * input.pageSize,
@@ -64,44 +65,7 @@ export const bookRouter = router({
       return { data: books, pageCount, bookCount };
     }),
 
-  getAllCat1: publicProcedure.query(async ({ ctx }) => {
-    const books = await ctx.prisma[entity].findMany({
-      select: { category1: true },
-      distinct: ["category1"],
-    });
-    return books;
-  }),
-
-  getAllCat1InFolder: publicProcedure
-    .input(getAllCatInFolderSchema)
-    .query(async ({ input, ctx }) => {
-      const books = await ctx.prisma[entity].findMany({
-        where: { folder: { name: input.folder } },
-        select: { category1: true },
-        distinct: ["category1"],
-      });
-      return books;
-    }),
-
-  getAllCat2: publicProcedure.query(async ({ ctx }) => {
-    const books = await ctx.prisma[entity].findMany({
-      select: { category2: true },
-      distinct: ["category2"],
-    });
-    return books;
-  }),
-
-  getAllCat2InFolder: publicProcedure
-    .input(getAllCatInFolderSchema)
-    .query(async ({ input, ctx }) => {
-      const books = await ctx.prisma[entity].findMany({
-        where: { folder: { name: input.folder } },
-        select: { category2: true },
-        distinct: ["category2"],
-      });
-      return books;
-    }),
-
+  
   update: publicProcedure
     .input(updateSchema)
     .mutation(async ({ input, ctx }) => {

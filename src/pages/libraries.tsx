@@ -1,11 +1,11 @@
 import Page from "@/core/components/Layout/Page";
-import Folders from "@/features/Folders/FolderList";
+import Libraries from "@/features/Libraries/LibraryList";
 
-export default function FoldersPage() {
+export default function LibraryPage() {
  
   return (
     <Page title="Φάκελοι" auth={false}>
-      <Folders />
+      <Libraries />
     </Page>
   );
 }

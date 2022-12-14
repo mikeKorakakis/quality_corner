@@ -2,7 +2,7 @@ import Page from "@/core/components/Layout/Page";
 import Books from "@/features/Books/BookList";
 // import { useFolderStore } from './../core/stores/folderStore';
 
-export default function HomePage() {
+export default function Page() {
   //   const {folders} = useFolderStore()
 
   return (

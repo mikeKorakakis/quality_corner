@@ -6,21 +6,20 @@ import Table from "./Table";
 import LoadingPage from "./../../core/components/Layout/LoadingPage";
 import { useRouter } from "next/router";
 import { notify } from "@/utils/notify";
+import { HOME_URL } from './../../config';
 
 const columns = new Map<string, string>([
   ["index", "A/A"],
   ["title", "ΤΙΤΛΟΣ"],
   ["description", "ΠΕΡΙΓΡΑΦΗ"],
-  ["category1", "ΚΑΤΗΓΟΡΙΑ"],
-  ["category2", "ΥΠΟΚΑΤΗΓΟΡΙΑ"],
   ["fileUrl", "ΑΡΧΕΙΟ"],
 ]);
 interface Props {
-  folder: string;
+  slug: string[];
 }
 const router = "book";
-const getAllProcedure = "getAllInFolder";
-const BookList = ({ folder }: Props) => {
+const getAllProcedure = "getAllWithParams";
+const BookList = ({ slug }: Props) => {
   const [loading, setLoading] = useState(false);
   const [allowed, setAllowed] = useState("");
   const [mod, setMod] = useState("");
@@ -28,66 +27,66 @@ const BookList = ({ folder }: Props) => {
   const utils = trpc.useContext();
   const r = useRouter();
   // get folder with trpc
-  const { data: folderData, status: folderStatus } =
-    trpc.folder.getByName.useQuery({ name: folder });
+  const [lib, folder, subFolder] = slug;
+  const library = lib ?? "";
+  const { data: libraryData, status: libraryStatus } =
+    trpc.library.getByName.useQuery({ name: library });
 
   const { data, status } = useSession();
   const syncdb = async () => {
     setLoading(true);
     // Μπακαλοκώδικας για να κάνει συγχρονισμό των αρχείων (2 φορές γιατί κάνει timeout)
-    await fetch(`/api/sync_db?folder=${folder}`, {
+    await fetch(`/api/sync_db?library=${library}`, {
       method: "GET",
     });
-    await fetch(`/api/sync_db?folder=${folder}`, {
+    await fetch(`/api/sync_db?library=${library}`, {
       method: "GET",
     });
     utils[router][getAllProcedure].invalidate();
     setLoading(false);
   };
 
-console.log(data?.user?.role)
-console.log(data?.user?.groups)
   useEffect(() => {
     const groups = data?.user?.groups || [];
-    if (!(status === "loading") || !(folderStatus === "loading")) {
+    if (!(status === "loading") || !(libraryStatus === "loading")) {
       if (data?.user?.role === "admin") {
         setRole("admin");
-        setAllowed(folder);
+        setAllowed(library);
       } else if (
         groups.some((group) => {
           return (
-            group.split("_")[0]?.toLowerCase() === folder.toLowerCase() &&
+            group.split("_")[0]?.toLowerCase() === library.toLowerCase() &&
             group.split("_")[1]?.toLowerCase() === "admin"
           );
         }) ||
         data?.user?.role === "moderator"
       ) {
-        setMod(folder);
-        setAllowed(folder);
+        setMod(library);
+        setAllowed(library);
       } else if (
-        folderData?.private &&
-        !groups.some((group) => group.split("_")[0]?.toLowerCase() === folder)
+        libraryData?.private &&
+        !groups.some((group) => group.split("_")[0]?.toLowerCase() === library)
       ) {
         notify({ message: "Δεν έχετε πρόσβαση στον φάκελο", type: "error" });
         // add one second delay to allow notification to show
         setTimeout(() => {
           if (status === "authenticated") {
-            r.push("/");
+            r.push(HOME_URL);
           } else {
             r.push("/auth/signin");
           }
         }, 2000);
       } else {
-        setAllowed(folder);
+        setAllowed(library);
       }
     }
-  }, [folder, folderData, data, r, status, folderStatus, role]);
+  }, [library, libraryData, data, r, status, libraryStatus, role]);
   if (
     status === "loading" ||
-    folderStatus === "loading" ||
+    libraryStatus === "loading" ||
     !(
-      allowed === folder ||
-      mod === folder ||
+      allowed === library ||
+      mod === library ||
       role === "admin" ||
       role === "moderator"
     )
@@ -112,10 +111,16 @@ console.log(data?.user?.groups)
       <div className="w-full overflow-x-auto">
         <Table
           role={
-            role === "admin" ? "admin" :( mod === folder || role==="moderator") ? "moderator" : "user"
+            role === "admin"
+              ? "admin"
+              : mod === library || role === "moderator"
+              ? "moderator"
+              : "user"
           }
           columnMap={columns}
+          library={library}
           folder={folder}
+          subFolder={subFolder}
           // EditForm={BookEditForm}
         />
       </div>

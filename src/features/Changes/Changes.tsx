@@ -2,7 +2,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import LoadingPage from "../../core/components/Layout/LoadingPage";
 import { useRouter } from "next/router";
-import { useFolderStore } from "@/core/stores/libraryStore";
+import { useLibraryStore } from "@/core/stores/libraryStore";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { TableCellsIcon, CircleStackIcon } from "@heroicons/react/24/outline";
 import { trpc } from "@/utils/trpc";
@@ -11,14 +11,15 @@ import clsx from "clsx";
 import { useModalStore } from "@/core/stores/modalStore";
 import ModalContent from "./../../core/components/Layout/Modal/ModalContent";
 import { notify } from "@/utils/notify";
+import { HOME_URL } from "@/config";
 
 const FolderChanges = () => {
   const r = useRouter();
   // get folder with trpc
   const { data, status } = useSession();
   // get folders with useFolderstore
-  const state = useFolderStore();
-  const folders = state.folders;
+  const state = useLibraryStore();
+  const libraries = state.libraries;
   const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
 
   const { data: folderData, isLoading: loadingFolders } =
@@ -30,7 +31,7 @@ const FolderChanges = () => {
   useEffect(() => {
     if (!(status === "loading")) {
       if (!(data?.user?.role === "admin")) {
-        r.push("/");
+        r.push(HOME_URL);
       }
     }
   }, [data, r, status]);
@@ -78,7 +79,7 @@ const FolderChanges = () => {
               key={i}
               folderName={folder.name}
               id={folder?.id}
-              foldersInDisk={folders}
+              foldersInDisk={libraries}
               folderDataInDb={folderDataInDb}
             />
           );

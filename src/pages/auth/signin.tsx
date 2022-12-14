@@ -5,6 +5,7 @@ import Login from "@/features/Login";
 import { useEffect } from 'react';
 import { useRouter } from "next/router";
 import LoadingPage from './../../core/components/Layout/LoadingPage';
+import { HOME_URL } from './../../config';
 
 const SigninPage: NextPage = () => {
     const router = useRouter()
@@ -15,7 +16,7 @@ const SigninPage: NextPage = () => {
   }
 
   if (status === "authenticated") {
-    router.push("/")
+    router.push(HOME_URL)
   }
 
 

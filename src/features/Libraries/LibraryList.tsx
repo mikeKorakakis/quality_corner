@@ -9,10 +9,10 @@ const columns = new Map<string, string>([
   ["index", "A/A"],
   ["name", "ΟΝΟΜΑ"],
   ["description", "ΠΕΡΙΓΡΑΦΗ"],
-  ["library", "Βιβλιοθήκη"],
+  ["private", "ΙΔΙΩΤΙΚΗ"],
 ]);
 
-const FolderList = () => {
+const LibraryList = () => {
   const r = useRouter();
   // get folder with trpc
   const { data, status } = useSession();
@@ -29,7 +29,7 @@ const FolderList = () => {
   return (
     <div className="not-prose mx-auto mt-6 mb-10 ">
       <div className="flex justify-between">
-        <h1 className="ml-20 mb-5 text-3xl font-light">ΦΑΚΕΛΟΙ</h1>
+        <h1 className="ml-20 mb-5 text-3xl font-light">Βιβλιοθήκες</h1>
       </div>
       <div className="w-full overflow-x-auto">
         <Table
@@ -41,4 +41,4 @@ const FolderList = () => {
   );
 };
 
-export default FolderList;
+export default LibraryList;
