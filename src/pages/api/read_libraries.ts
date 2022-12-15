@@ -1,6 +1,12 @@
 import fs from "fs";
 import { FOLDER_ROOT } from "@/config";
 import { PrismaClient } from "@prisma/client";
+
+const getDirectories = (source: string) =>
+  fs
+    .readdirSync(source, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 const readfolders = function (dir: string) {
   const list = fs.readdirSync(dir);
 
@@ -8,8 +14,9 @@ const readfolders = function (dir: string) {
 };
 
 const createFoldersInDb = async (folderPath: string) => {
-  const libraries = fs.readdirSync(folderPath);
+  const libraries = getDirectories(folderPath);
   const prisma = new PrismaClient();
+  console.log('libraries',libraries)
 
   libraries.forEach(async (library) => {
     const libraryExists = await prisma.library.findUnique({
@@ -23,12 +30,15 @@ const createFoldersInDb = async (folderPath: string) => {
         },
       });
     }
-    const folders = fs.readdirSync(folderPath + "/" + library);
+    const folders = getDirectories(folderPath + "/" + library);
+    console.log("folders in library", library, folders);
     folders.forEach(async (folder) => {
       let folderExists = await prisma.folder.findFirst({
         where: { name: folder, library: { name: library } },
       });
+      console.log('folderExists',folderExists, folder, library)
       if (!folderExists) {
+        console.log('foldercrate')
         folderExists = await prisma.folder.create({
           data: {
             name: folder,
@@ -36,18 +46,25 @@ const createFoldersInDb = async (folderPath: string) => {
           },
         });
       }
-      const subFolders = fs.readdirSync(
+      const subFolders = getDirectories(
         folderPath + "/" + library + "/" + folder
       );
       subFolders.forEach(async (subFolder) => {
         const subFolderExists = await prisma.subFolder.findFirst({
-          where: { name: subFolder, folder: { name: folder } },
+          where: {
+            name: subFolder,
+            folder: { name: folder },
+            library: { name: library },
+          },
         });
+        console.log('subFolderExists',subFolderExists)
+        console.log('subfolders in folder', library, folder, subFolder);
         if (!subFolderExists && folderExists) {
+            console.log('subfoldercreate')
           await prisma.subFolder.create({
             data: {
               name: subFolder,
-              folder: { connect: { id : folderExists.id } },
+              folder: { connect: { id: folderExists.id } },
               library: { connect: { name: library } },
             },
           });
@@ -69,6 +86,7 @@ const createFoldersInDb = async (folderPath: string) => {
 
 export default async function handler(req: any, res: any) {
   try {
+    console.log('getfolders in db')
     const folders = readfolders(FOLDER_ROOT);
     createFoldersInDb(FOLDER_ROOT);
 

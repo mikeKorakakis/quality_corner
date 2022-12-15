@@ -20,16 +20,18 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
   useEffect(() => {
     const theme = localStorage.getItem("theme");
-    typeof(theme) === 'string' && document.body.setAttribute("data-theme", JSON.parse(theme) );
+    typeof theme === "string" &&
+      document.body.setAttribute("data-theme", JSON.parse(theme));
   }, []);
 
   useEffect(() => {
     const fetchLibraries = async () => {
       const res = await fetch("/api/read_libraries");
+      console.log("fetching");
       const data = await res.json();
       state.setLibraries(data);
     };
-    fetchLibraries();
+  fetchLibraries();
   }, []);
 
   return (
