@@ -39,9 +39,9 @@ const BookList = ({ slug }: Props) => {
     await fetch(`/api/sync_db?library=${library}`, {
       method: "GET",
     });
-    await fetch(`/api/sync_db?library=${library}`, {
-      method: "GET",
-    });
+    // await fetch(`/api/sync_db?library=${library}`, {
+    //   method: "GET",
+    // });
     utils[router][getAllProcedure].invalidate();
     setLoading(false);
   };

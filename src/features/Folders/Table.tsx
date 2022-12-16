@@ -151,7 +151,6 @@ export default function Home({ columnMap, role }: Props) {
     }
   );
   const utils = trpc.useContext();
-console.log('tata',data?.data)
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
     onSuccess() {
       utils[router][getAllProcedure].invalidate();

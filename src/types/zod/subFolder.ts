@@ -9,7 +9,7 @@ export const createSchema = z.object({
 export type CreateSchemaType = z.infer<typeof createSchema>;
 
 export const getSchema = z.object({ id: z.number().min(0) });
-export const getByFolderSchema = z.object({ folder: z.string() });
+export const getByFolderAndLibrarySchema = z.object({ folder: z.string(), library: z.string() });
 
 export const getByNameSchema = z.object({ name: z.string() });
 

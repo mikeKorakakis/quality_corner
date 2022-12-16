@@ -423,9 +423,9 @@ export default function Home({
           table
             .getRowModel()
             .rows.slice(0, pagination.pageSize)
-            .map((row) => {
+            .map((row, i) => {
               return (
-                <tr key={row.id}>
+                <tr key={row.id} className={clsx(i%2===0&&'active')}>
                   {row.getVisibleCells().map((cell, i) => {
                     return i === 0 ? (
                       <th key={cell.id}>

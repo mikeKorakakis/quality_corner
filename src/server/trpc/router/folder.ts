@@ -37,12 +37,12 @@ export const folderRouter = router({
   }),
 
   getAllNoPagination: publicProcedure.query(async ({ ctx }) => {
-    return ctx.prisma[entity].findMany();
+    return ctx.prisma[entity].findMany({include: { library: true}});
   }),
 
   getBookGroups: publicProcedure.query(async ({ ctx }) => {
     const bookGroups = await ctx.prisma.book.groupBy({
-      by: ["libraryId"],
+      by: ["folderId"],
       _count: {
         _all: true,
       },

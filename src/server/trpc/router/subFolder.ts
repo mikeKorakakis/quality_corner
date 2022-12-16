@@ -3,7 +3,7 @@ import { getAllSchema } from "@/types/zod/general";
 import {
   createSchema,
   deleteSchema,
-  getByFolderSchema,
+  getByFolderAndLibrarySchema,
   getByNameSchema,
   getSchema,
   updateManySchema,
@@ -29,8 +29,7 @@ export const subFolderRouter = router({
       skip: input.pageIndex * input.pageSize,
       take: input.pageSize,
       orderBy: sorting,
-      select: { id: true, name: true, description: true, folder: true },
-
+      select: { id: true, name: true, description: true, folder: true, library: true },
     });
 
     const pageCount = Math.ceil(subFolderCount / input.pageSize);
@@ -38,7 +37,7 @@ export const subFolderRouter = router({
   }),
 
   getAllNoPagination: publicProcedure.query(async ({ ctx }) => {
-    return ctx.prisma[entity].findMany();
+    return ctx.prisma[entity].findMany({include: { library: true, folder: true}});
   }),
 
   getByName: publicProcedure
@@ -47,16 +46,20 @@ export const subFolderRouter = router({
       return ctx.prisma[entity].findFirst({ where: { name: input.name } });
     }),
 
-    getAllByFolder: publicProcedure
-    .input(getByFolderSchema)
+  getAllByFolderAndLibrary: publicProcedure
+    .input(getByFolderAndLibrarySchema)
     .query(async ({ input, ctx }) => {
-      return ctx.prisma[entity].findMany({ where: { folder: {name:input.folder} } });
+      return ctx.prisma[entity].findMany({
+        where: {
+          folder: { name: input.folder },
+          library: { name: input.library },
+        },
+      });
     }),
-
 
   getBookGroups: publicProcedure.query(async ({ ctx }) => {
     const bookGroups = await ctx.prisma.book.groupBy({
-      by: ["folderId"],
+      by: ["subFolderId"],
 
       _count: {
         _all: true,
@@ -100,9 +103,9 @@ export const subFolderRouter = router({
       return ctx.prisma[entity].delete({ where: { id: input.id } });
     }),
 
-//   create: protectedProcedure
-//     .input(createSchema)
-//     .mutation(async ({ input, ctx }) => {
-//       return ctx.prisma[entity].create({ data: input });
-//     }),
+  //   create: protectedProcedure
+  //     .input(createSchema)
+  //     .mutation(async ({ input, ctx }) => {
+  //       return ctx.prisma[entity].create({ data: input });
+  //     }),
 });

@@ -9,8 +9,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import "react-datepicker/dist/react-datepicker.css";
 
 import { trpc } from "../utils/trpc";
-import { useEffect } from "react";
 import { useLibraryStore } from "@/core/stores/libraryStore";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -24,15 +25,17 @@ const MyApp: AppType<{ session: Session | null }> = ({
       document.body.setAttribute("data-theme", JSON.parse(theme));
   }, []);
 
-  useEffect(() => {
-    const fetchLibraries = async () => {
-      const res = await fetch("/api/read_libraries");
-      console.log("fetching");
-      const data = await res.json();
-      state.setLibraries(data);
-    };
-  fetchLibraries();
-  }, []);
+  const fetchLibraries = async () => {
+    const res = await fetch("/api/read_libraries");
+    const data = await res.json();
+    return data
+};
+
+useQuery(["read_libraries"], fetchLibraries, {
+    onSuccess(data){
+        state.setLibraries(data)
+    }
+})
 
   return (
     <SessionProvider session={session}>

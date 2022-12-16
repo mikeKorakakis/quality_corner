@@ -9,11 +9,12 @@ import Button from "@/core/components/LoadingButton";
 // import Button from "../../app/common/buttons/Button";
 // import Checkbox from "../../app/common/checkboxes/Checkbox";
 
-import { APP_NAME, POST_LOGIN_REDIRECT_URL } from "./../config";
+import { APP_NAME, HOME_URL, POST_LOGIN_REDIRECT_URL } from "./../config";
 import PasswordInput from "./../core/components/Form/PasswordInput";
 import { useEffect } from "react";
 import { notify } from "../utils/notify";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 const LoginForm = () => {
   const session = useSession();
@@ -64,10 +65,14 @@ const LoginForm = () => {
         <div className="card w-full md:flex">
           <div className="card-body w-full py-10  px-5 md:px-10">
             <div className="mb-10 text-center">
+
               <h1 className="text-neutral-600 font-mono text-3xl font-bold">
                 {APP_NAME}
               </h1>
+              
               <p>Εισάγετε τα στοιχεία σας για να συνδεθείτε</p>
+              <p>Το όνομα χρήστη πρέπει να είναι της μορφής username@domain</p>
+              <p>π.χ testuser@day.haf.gr</p>
             </div>
             <div className="h-2"></div>
 
@@ -107,7 +112,7 @@ const LoginForm = () => {
                   />
                 </div> */}
               </div>
-              {/* <div className="h-1"></div> */}
+              <div className="h-1"></div>
               <div>
                 <Button
                   loading={isSubmitting}
@@ -118,6 +123,9 @@ const LoginForm = () => {
                 </Button>
               </div>
               <div className="h-2"></div>
+              <Link href={HOME_URL} >
+               <span className="outline outline-1 text-neutral-600 font-mono text-xl font-bold p-1 rounded cursor-pointer">Πίσω στην αρχική</span>
+              </Link>
             </form>
           </div>
         </div>

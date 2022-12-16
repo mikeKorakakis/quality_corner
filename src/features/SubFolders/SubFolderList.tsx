@@ -9,7 +9,8 @@ const columns = new Map<string, string>([
   ["index", "A/A"],
   ["name", "ΟΝΟΜΑ"],
   ["description", "ΠΕΡΙΓΡΑΦΗ"],
-  ["folder", "ΦΑΚΕΛΟΣ"]
+  ["folder", "ΦΑΚΕΛΟΣ"],
+  ["library", "ΒΙΒΛΙΟΘΗΚΗ"]
 ]);
 
 const FolderList = () => {

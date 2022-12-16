@@ -79,7 +79,6 @@ export default async function handler(req: any, res: any) {
           where: { name: cat1, library: { name: library } },
           select: { id: true },
         });
-
         const subFolderId = await prisma.subFolder.findFirst({
           where: {
             name: cat2,
@@ -99,25 +98,51 @@ export default async function handler(req: any, res: any) {
         // });
 
         if (
-          folderId &&
           !(
             titleWithoutExtension === "Thumbs" ||
             titleWithoutExtension === "_Thumbs" ||
             titleWithoutExtension === "thumbs"
           )
         ) {
-            const fid =  folderId ? folderId.id : 1;
-            const sid = subFolderId ? subFolderId.id : 1;
-          await prisma.book.create({
-            data: {
-              title: titleWithoutExtension,
-              folder: {connect: {id: fid}},
-              subFolder: {connect: {id: sid}},
-              fileUrl: file,
-              library: { connect: { name: library } },
-            },
-          });
-          //   itemBuffer = [];
+          const fid = folderId ? folderId.id : undefined;
+          const sid = subFolderId ? subFolderId.id : undefined;
+          if (fid && sid)
+            await prisma.book.create({
+              data: {
+                title: titleWithoutExtension,
+                folder: { connect: { id: fid } },
+                subFolder: { connect: { id: sid } },
+                fileUrl: file,
+                library: { connect: { name: library } },
+              },
+            });
+          else if (fid) {
+            await prisma.book.create({
+              data: {
+                title: titleWithoutExtension,
+                folder: { connect: { id: fid } },
+                fileUrl: file,
+                library: { connect: { name: library } },
+              },
+            });
+          } else if (sid) {
+            await prisma.book.create({
+              data: {
+                title: titleWithoutExtension,
+                subFolder: { connect: { id: sid } },
+                fileUrl: file,
+                library: { connect: { name: library } },
+              },
+            });
+          }else{
+            await prisma.book.create({
+                data: {
+                  title: titleWithoutExtension,
+                  fileUrl: file,
+                  library: { connect: { name: library } },
+                },
+              });
+          }
         }
       }
       // remove the file from the oldDbFileUrlsArray array

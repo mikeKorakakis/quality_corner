@@ -39,7 +39,7 @@ import clsx from "clsx";
 // type Transformed = UnionToIntersection<test>
 const router = "subFolder";
 const getAllProcedure = "getAll";
-const getAllByFolderProcedure = "getAllByFolder";
+const getAllByFolderAndLibraryProcedure = "getAllByFolderAndLibrary";
 const getAllNoPaginationProcedure = "getAllNoPagination";
 const updateProcedure = "updateMany";
 interface Props {
@@ -155,7 +155,7 @@ export default function Home({ columnMap, role }: Props) {
   const { mutate: update } = trpc[router][updateProcedure].useMutation({
     onSuccess() {
       utils[router][getAllProcedure].invalidate();
-      utils[router][getAllByFolderProcedure].invalidate();
+      utils[router][getAllByFolderAndLibraryProcedure].invalidate();
       utils[router][getAllNoPaginationProcedure].invalidate();
     },
     onError(error) {

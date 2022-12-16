@@ -9,7 +9,7 @@ export type CreateSchemaType = z.infer<typeof createSchema>;
 
 export const getSchema = z.object({ id: z.number().min(0) });
 
-export const deleteByFolderIdSchema = z.object({ id: z.number().min(0) });
+export const deleteByLibraryIdSchema = z.object({ id: z.number().min(0) });
 export const transferBooksToFolderSchema = z.object({
   fromId: z.number().min(0),
   toId: z.number().min(0),
