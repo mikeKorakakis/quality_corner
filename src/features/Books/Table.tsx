@@ -200,6 +200,7 @@ export default function Home({
       return columnHelper.display({
         id: key,
         cell: () => title,
+        enableColumnFilter: false,
       });
     } else if (
       key === "description" &&
@@ -208,6 +209,8 @@ export default function Home({
       return columnHelper.accessor(key, {
         id: key,
         header: () => <span className="w-[4rem]">{title}</span>,
+        enableColumnFilter: false,
+
       });
     } else if (key === "index") {
       return columnHelper.display({
@@ -234,6 +237,7 @@ export default function Home({
           info?.table?.getSortedRowModel()?.flatRows?.indexOf(info?.row) +
           1 +
           pagination?.pageIndex * pagination?.pageSize,
+        enableColumnFilter: false,
       });
     } else {
       return columnHelper.accessor(key, {
@@ -266,7 +270,9 @@ export default function Home({
             return <i>{value}</i>;
           }
         },
+        enableColumnFilter: key === 'title' || key === 'description',
       });
+
     }
   });
 
@@ -674,16 +680,17 @@ function Filter({
     </div>
   ) : (
     <>
-      <datalist id={column.id + "list"}>
+      {/* <datalist id={column.id + "list"}>
         {sortedUniqueValues.slice(0, 5000).map((value: any, i) => (
           <option value={value} key={i} />
-        ))}
-      </datalist>
+        ))} 
+      </datalist>*/}
       <DebouncedInput
         type="text"
         value={(columnFilterValue ?? "") as string}
         onChange={(value) => column.setFilterValue(value)}
-        placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
+        // placeholder={`Αναζήτηση... (${column.getFacetedUniqueValues().size})`}
+        placeholder={`Αναζήτηση...`}
         className="input-bordered input input-sm mt-2 focus:border-neutral-focus focus:outline-none focus:ring-0 "
         list={column.id + "list"}
       />
@@ -694,22 +701,22 @@ function Filter({
 
 const FileDownload = ({ filename }: { filename: string }) => {
   return (
-    <div>
+    <div className="">
       {filename ? (
         <a
           target="_blank"
           rel="noopener noreferrer"
           // onClick={() => agent.BookEditions.getBookFile(id, filename)}
           href={"/" + filename.replace("public/", "")}
-          className="btn btn-success btn-md btn-circle ml-[40%]"
+          className="btn btn-success btn-sm btn-circle ml-[40%] -my-2 "
 
           // className="inline-flex items-center rounded-full border border-transparent bg-primary-600 p-1 text-black shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
-          <ArrowDownTrayIcon className="h-6 w-6" aria-hidden="true" />
+          <ArrowDownTrayIcon className="h-4 w-4" aria-hidden="true" />
         </a>
       ) : (
         <a className="btn btn-error btn-md btn-circle  ml-[40%]">
-          <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+          <XMarkIcon className="h-4 w-4" aria-hidden="true" />
         </a>
       )}
     </div>

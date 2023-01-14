@@ -48,11 +48,13 @@ interface Props {
 
 const defaultColumn: Partial<ColumnDef<any>> = {
   cell: ({ getValue, row, column: { id }, table }) => {
-    if (id === "private") {
+    if (id === "private" || id === "showDescription") {
       // const originalRow = row.original;
       const initialValue = getValue() as boolean;
+      console.log(initialValue)
 
       const handleChange = (val: boolean) => {
+        console.log("changevalue",val)
         //   const updatedRow = {
         //     ...originalRow,
         //     private: val,
@@ -72,6 +74,7 @@ const defaultColumn: Partial<ColumnDef<any>> = {
         <input
           type="checkbox"
           className="checkbox ml-20"
+          name={id}
           checked={initialValue ?? false}
           onChange={(e) => handleChange(e.target.checked)}
         />
@@ -161,9 +164,11 @@ export default function Home({ columnMap, role }: Props) {
     },
   });
 
+
   const handleSave = () => {
     setLoading(true);
     try {
+        console.log('tableData', tableData)
       if (tableData) {
         update(tableData);
         //   update(updatedData);
@@ -195,7 +200,7 @@ export default function Home({ columnMap, role }: Props) {
         id: key,
         cell: () => title,
       });
-    } else if (key === "private" || key === "description") {
+    } else if (key === "showDescription" ||  key === "private" || key === "description") {
       return columnHelper.accessor(key, {
         id: key,
         header: () => <span className="w-[4rem]">{title}</span>,

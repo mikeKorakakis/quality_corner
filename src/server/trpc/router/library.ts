@@ -64,6 +64,7 @@ export const libraryRouter = router({
           description: input.description,
           name: input.name,
           private: input.private,
+          showDescription: input.showDescription,
         },
       });
     }),
@@ -79,6 +80,7 @@ export const libraryRouter = router({
               description: folder.description,
               name: folder.name,
               private: folder.private,
+              showDescription: folder.showDescription,
             },
           });
         })

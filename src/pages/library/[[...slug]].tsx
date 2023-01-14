@@ -7,6 +7,7 @@ export default function LibraryPage() {
   // get the slug from the url as string or empty string
   const {slug: sl} = router.query
   const slug = Array.isArray(sl) ?  sl : [sl ?? ""];
+  
   return (
     <Page title="Βιβλιοθήκη" auth={false}>
       <Books slug={slug} />

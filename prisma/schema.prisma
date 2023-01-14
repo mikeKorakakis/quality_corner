@@ -37,6 +37,7 @@ model Library {
     books       Book[]
     subFolders  SubFolder[]
     folders     Folder[]
+    showDescription Boolean   @default(false)
 }
 
 model Folder {

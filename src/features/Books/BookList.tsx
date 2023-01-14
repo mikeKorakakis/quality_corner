@@ -6,7 +6,8 @@ import Table from "./Table";
 import LoadingPage from "./../../core/components/Layout/LoadingPage";
 import { useRouter } from "next/router";
 import { notify } from "@/utils/notify";
-import { HOME_URL } from './../../config';
+import { HOME_URL } from "./../../config";
+import IndexPage from "./IndexPage";
 
 const columns = new Map<string, string>([
   ["index", "A/A"],
@@ -25,12 +26,20 @@ const BookList = ({ slug }: Props) => {
   const [mod, setMod] = useState("");
   const [role, setRole] = useState("user");
   const utils = trpc.useContext();
+
   const r = useRouter();
   // get folder with trpc
   const [lib, folder, subFolder] = slug;
   const library = lib ?? "";
   const { data: libraryData, status: libraryStatus } =
-    trpc.library.getByName.useQuery({ name: library });
+    trpc.library.getByName.useQuery(
+      { name: library },
+      {
+        refetchOnMount: true,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+      }
+    );
 
   const { data, status } = useSession();
   const syncdb = async () => {
@@ -90,13 +99,27 @@ const BookList = ({ slug }: Props) => {
       role === "admin" ||
       role === "moderator"
     )
-  )
+  ) {
     return <LoadingPage page={true} />;
+  }
+
+  const roleName =
+    role === "admin"
+      ? "admin"
+      : mod === library || role === "moderator"
+      ? "moderator"
+      : "user";
+      console.log(roleName,  roleName === "user")
+
+  !libraryData?.showDescription && roleName === "user" && columns.delete("description");
+
   return (
     <div className="not-prose mx-auto mt-6 mb-10 ">
       <div className="flex justify-between">
         {" "}
-        <h1 className="ml-20 mb-5 text-3xl font-light">ΒΙΒΛΙΟΓΡΑΦΙΕΣ</h1>
+        <h1 className="ml-20 mb-5 text-3xl font-light">
+          {libraryData?.description ?? libraryData?.description}
+        </h1>
         {role === "admin" && (
           <Button
             disabled={loading}
@@ -109,20 +132,18 @@ const BookList = ({ slug }: Props) => {
         )}
       </div>
       <div className="w-full overflow-x-auto">
-        <Table
-          role={
-            role === "admin"
-              ? "admin"
-              : mod === library || role === "moderator"
-              ? "moderator"
-              : "user"
-          }
-          columnMap={columns}
-          library={library}
-          folder={folder}
-          subFolder={subFolder}
-          // EditForm={BookEditForm}
-        />
+        {folder === "indexPage" ? (
+          <IndexPage library={library} />
+        ) : (
+          <Table
+            role={roleName}
+            columnMap={columns}
+            library={library}
+            folder={folder}
+            subFolder={subFolder}
+            // EditForm={BookEditForm}
+          />
+        )}
       </div>
     </div>
   );

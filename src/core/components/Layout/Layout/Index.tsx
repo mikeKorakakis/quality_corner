@@ -9,7 +9,7 @@ import {
   XMarkIcon,
   BookOpenIcon,
   CogIcon,
-  ClipboardDocumentIcon,
+  ClipboardDocumentListIcon,
   SunIcon,
   MoonIcon,
   UserCircleIcon,
@@ -22,6 +22,7 @@ import {
   ChevronDoubleDownIcon,
   TrashIcon,
   LockClosedIcon,
+  PauseIcon,
 } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import { ReactNode, Fragment, useState, useEffect } from "react";
@@ -80,7 +81,8 @@ const Layout = ({ children }: Props) => {
       name: library,
       href: `/library/${library}`,
       current: libraryUrl === library && !folderUrl && !subFolderUrl,
-      priv: libraries && libraries.filter(l => l.name === library)[0]?.private
+      priv:
+        libraries && libraries.filter((l) => l.name === library)[0]?.private,
     };
   });
 
@@ -182,10 +184,10 @@ const Layout = ({ children }: Props) => {
                       aria-label="Homepage"
                       className="flex-0 btn-ghost btn px-2 "
                     >
-                      <div className="font-title inline-flex text-lg text-primary transition-all duration-200 md:text-3xl">
-                        <Logo className="bg-white" />
+                      <div className="font-title inline-flex text-lg text-primary transition-all duration-200 md:text-3xl ">
+                        <Logo className="w-10  fill-secondary md:w-14" />
 
-                        <span className="text-primary">{APP_NAME}</span>
+                        <span className="pt-1 text-primary">{APP_NAME}</span>
                         {/* <span className="uppercase text-base-content">
                           {title1}
                         </span> */}
@@ -397,13 +399,13 @@ const LibraryLink = ({
   folderUrl,
   subFolderUrl,
   libraryUrl,
-  priv
+  priv,
 }: LibraryLinkProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const router = useRouter();
   useEffect(() => {
-    current && setOpen(true);
-  }, [current]);
+    libraryName == libraryUrl && setOpen(true);
+  }, [libraryName, libraryUrl]);
   return (
     <>
       <div
@@ -433,12 +435,18 @@ const LibraryLink = ({
           }}
           className="flex-1"
         >
-          <span >
-          {libraryDescription} {priv && <LockClosedIcon className={"mb-1 h-5 w-5 inline font-bold text-error"}/>}</span>
+          <span>
+            {libraryDescription}{" "}
+            {priv && (
+              <LockClosedIcon
+                className={"mb-1 inline h-5 w-5 font-bold text-error"}
+              />
+            )}
+          </span>
         </div>
       </div>
       {open && (
-        <FolderLink
+        <FolderLinks
           folderUrl={folderUrl}
           subFolderUrl={subFolderUrl}
           library={libraryName}
@@ -449,25 +457,32 @@ const LibraryLink = ({
   );
 };
 
-interface FolderLinkProps {
+interface FolderLinksProps {
   library: string;
   folderUrl: string;
   subFolderUrl: string;
   libraryUrl?: string;
 }
 
-const FolderLink = ({
+const FolderLinks = ({
   library,
   libraryUrl,
   folderUrl,
   subFolderUrl,
-}: FolderLinkProps) => {
+}: FolderLinksProps) => {
   const { data: folders, isLoading: loadingFolders } =
     trpc.folder.getAllByLibrary.useQuery({ library });
+
   if (loadingFolders) return <Skeleton />;
 
   return (
     <>
+      <IndexLink
+        library={library}
+        current={
+          library === libraryUrl && folderUrl === "indexPage" && !subFolderUrl
+        }
+      />
       {folders
         ?.sort(function (a, b) {
           const x = a.description ?? a.name;
@@ -482,35 +497,118 @@ const FolderLink = ({
         })
         .map((folder) => {
           return (
-            <Fragment key={folder.id}>
-              <Link href={`/library/${library}/${folder.name}`} key={folder.id}>
-                <div
-                  className={clsx(
-                    "flex  gap-4 ",
-                    library === libraryUrl &&
-                      folderUrl === folder.name &&
-                      !subFolderUrl &&
-                      "active"
-                  )}
-                >
-                  <span className="flex-none">
-                    <Bars2Icon className="mr-4 h-6 w-6" aria-hidden="true" />
-                  </span>
-                  <span className="flex-1 font-bold">
-                    {folder.description ?? folder.name}
-                  </span>
-                </div>
-              </Link>
-              <SubFolderLink
-                subFolderUrl={subFolderUrl}
-                libraryUrl={libraryUrl}
-                folderUrl={folderUrl}
-                library={library}
-                folder={folder.name}
-              />
-            </Fragment>
+            <FolderLink
+              key={folder.id}
+              folderName={folder.name}
+              folderDescription={folder?.description}
+              current={
+                library === libraryUrl &&
+                folderUrl === folder.name &&
+                !subFolderUrl
+              }
+              folderUrl={folderUrl}
+              subFolderUrl={subFolderUrl}
+              library={library}
+              libraryUrl={libraryUrl}
+            />
           );
         })}
+    </>
+  );
+};
+
+interface IndexLinkProps {
+  library: string;
+  current: boolean;
+}
+
+const IndexLink = ({ library, current }: IndexLinkProps) => {
+  const router = useRouter();
+
+  return (
+    <>
+      <div className={clsx("flex gap-4", current && "active")}>
+        <span className="flex-none">
+          <ClipboardDocumentListIcon className={"mr-4 h-6 w-6"} aria-hidden="true" />
+
+        </span>
+        <div
+          onClick={() => {
+            router.push(`/library/${library}/indexPage`);
+          }}
+          className="flex-1"
+        >
+          <span className="flex-1 font-bold">Index</span>
+        </div>
+      </div>
+    </>
+  );
+};
+
+interface FolderLinkProps {
+  library: string;
+  folderUrl: string;
+  folderName: string;
+  folderDescription: string | null;
+  subFolderUrl: string;
+  libraryUrl?: string;
+  current: boolean;
+}
+
+const FolderLink = ({
+  library,
+  libraryUrl,
+  folderUrl,
+  folderName,
+  folderDescription,
+  subFolderUrl,
+  current,
+}: FolderLinkProps) => {
+  const [open, setOpen] = useState<boolean>(false);
+  const router = useRouter();
+  useEffect(() => {
+    library === libraryUrl && folderName === folderUrl && setOpen(true);
+  }, [library, libraryUrl, folderName, folderUrl]);
+
+  return (
+    <>
+      <div className={clsx("flex gap-4", current && "active")}>
+        <span className="flex-none">
+          {open ? (
+            <PauseIcon
+              onClick={() => setOpen(false)}
+              className={"mr-4 h-6 w-6"}
+              aria-hidden="true"
+            />
+          ) : (
+            <Bars2Icon
+              onClick={() => setOpen(true)}
+              className={"mr-4 h-6 w-6"}
+              aria-hidden="true"
+            />
+          )}
+          {/* <Bars2Icon className="mr-4 h-6 w-6" aria-hidden="true" /> */}
+        </span>
+        <div
+          onClick={() => {
+            router.push(`/library/${library}/${folderName}`);
+          }}
+          className="flex-1"
+        >
+          <span className="flex-1 font-bold">
+            {folderDescription ?? folderName}
+          </span>
+        </div>
+      </div>
+      {open && (
+        <SubFolderLink
+          subFolderUrl={subFolderUrl}
+          libraryUrl={libraryUrl}
+          folderUrl={folderUrl}
+          library={library}
+          folder={folderName}
+        />
+      )}
     </>
   );
 };
@@ -536,7 +634,8 @@ const SubFolderLink = ({
 
   return (
     <>
-      {subFolders?.sort(function (a, b) {
+      {subFolders
+        ?.sort(function (a, b) {
           const x = a.description ?? a.name;
           const y = b.description ?? b.name;
           if (x < y) {
@@ -546,29 +645,40 @@ const SubFolderLink = ({
             return 1;
           }
           return 0;
-        }).map((subFolder) => (
-        <Link
-          href={`/library/${library}/${folder}/${subFolder.name}`}
-          key={subFolder.id}
-        >
-          <div
-            className={clsx(
-              " flex gap-4 pl-10 ",
-              libraryUrl === library &&
-                folderUrl === folder &&
-                subFolderUrl === subFolder.name &&
-                "active"
-            )}
-          >
-            <span className="flex-none">
-              <Bars3Icon className="mr-4 h-6 w-6" aria-hidden="true" />
-            </span>
-            <span className="flex-1">
-              {subFolder.description ?? subFolder.name}
-            </span>
-          </div>
-        </Link>
-      ))}
+        })
+        .map((subFolder) => {
+          //   console.log(
+          //     libraryUrl,
+          //     library,
+          //     folderUrl,
+          //     folder,
+          //     subFolderUrl,
+          //     subFolder.name
+          //   );
+          return (
+            <Link
+              href={`/library/${library}/${folder}/${subFolder.name}`}
+              key={subFolder.id}
+            >
+              <div
+                className={clsx(
+                  " flex gap-4 pl-10 ",
+                  libraryUrl === library &&
+                    folderUrl === folder &&
+                    subFolderUrl === subFolder.name &&
+                    "active"
+                )}
+              >
+                <span className="flex-none">
+                  <Bars3Icon className="mr-4 h-6 w-6" aria-hidden="true" />
+                </span>
+                <span className="flex-1">
+                  {subFolder.description ?? subFolder.name}
+                </span>
+              </div>
+            </Link>
+          );
+        })}
     </>
   );
 };

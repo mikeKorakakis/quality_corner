@@ -4,6 +4,7 @@ export const createSchema = z.object({
   name: z.string(),  
   description: z.string().nullish(),  
   private: z.boolean(),  
+  showDescription: z.boolean(),  
 });
 
 export type CreateSchemaType = z.infer<typeof createSchema>;

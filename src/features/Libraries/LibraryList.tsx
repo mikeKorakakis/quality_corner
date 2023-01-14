@@ -10,6 +10,7 @@ const columns = new Map<string, string>([
   ["name", "ΟΝΟΜΑ"],
   ["description", "ΠΕΡΙΓΡΑΦΗ"],
   ["private", "ΙΔΙΩΤΙΚΗ"],
+  ["showDescription", "ΕΜΦΑΝΙΣΗ ΠΕΡΙΓΡΑΦΗΣ"],
 ]);
 
 const LibraryList = () => {
