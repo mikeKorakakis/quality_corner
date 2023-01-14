@@ -230,7 +230,7 @@ const Library = ({
     onError: () => {
       notify({
         message: "Σφάλμα κατά την Διαγραφή των Δεδομένων",
-        type: "success",
+        type: "error",
       });
     },
   });
