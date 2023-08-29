@@ -31,13 +31,19 @@ export const authOptions: NextAuthOptions = {
         // @ts-ignore
         const groups = user.groups;
         token.groups = groups;
+        // console.log(groups.some((group) => group === "domain admins"));
+
         if (
           (user.name?.includes("@day.haf.gr") &&
             groups.includes("domain admins")) ||
           user.name === "admin"
         ) {
           token.role = "admin";
-        } else if (user.name === "moderator") {
+        } else if (
+          user.name === "moderator" ||
+          (user.name?.includes("@day.haf.gr") &&
+            groups.some((group: string) => group.includes("_admin")))
+        ) {
           token.role = "moderator";
         } else {
           token.role = "user";
@@ -74,8 +80,8 @@ export const authOptions: NextAuthOptions = {
             (init: string[], folder: string) => {
               return [
                 ...init,
-                folder.toLowerCase() + "_view",
-                folder.toLowerCase() + "_admin",
+                folder.toLowerCase().replace("public/library/", "") + "_view",
+                folder.toLowerCase().replace("public/library/", "") + "_admin",
               ];
             },
             []
@@ -90,6 +96,7 @@ export const authOptions: NextAuthOptions = {
           try {
             await client.bind(credentials.username, credentials.password);
           } catch (e) {
+            console.log(e);
             return Promise.reject();
           }
 
@@ -123,12 +130,15 @@ export const authOptions: NextAuthOptions = {
             group = group && group.toLowerCase();
             groups = group ? [group] : [""];
           }
+          console.log(groups);
           const intesect =
             groups &&
             groups?.filter(
               (group) =>
                 availableGroups.includes(group) || group === "domain admins"
             );
+
+          console.log(availableGroups, groups, intesect);
 
           if (intesect?.length === 0) {
             return Promise.reject();

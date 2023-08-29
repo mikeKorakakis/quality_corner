@@ -21,21 +21,25 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
   useEffect(() => {
     const theme = localStorage.getItem("theme");
-    typeof theme === "string" &&
-      document.body.setAttribute("data-theme", JSON.parse(theme));
+    try {
+      typeof theme === "string" &&
+        document.body.setAttribute("data-theme", JSON.parse(theme));
+    } catch (e) {
+      console.log(e);
+    }
   }, []);
 
   const fetchLibraries = async () => {
     const res = await fetch("/api/read_libraries");
     const data = await res.json();
-    return data
-};
+    return data;
+  };
 
-useQuery(["read_libraries"], fetchLibraries, {
-    onSuccess(data){
-        state.setLibraries(data)
-    }
-})
+  useQuery(["read_libraries"], fetchLibraries, {
+    onSuccess(data) {
+      state.setLibraries(data);
+    },
+  });
 
   return (
     <SessionProvider session={session}>
